@@ -1,72 +1,181 @@
-import React from "react";
+import React, { useEffect, useState, useMemo } from "react";
+import { Plus } from "lucide-react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../utils/firebase";
 
-import {Plus, Edit2, Trash2} from "lucide-react"; 
+export const TablaProductoTerminado = ({ onAdd }) => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-export const TablaProductoTerminado = ({
-    producto, 
-    onAdd, 
-    onEdit, 
-    onDelete
-}) => {
-    return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">Tabla de Salidas</h2>
-                <button
-                    onClick={onAdd}
-                    className="flex items-center gap-2  bg-blue-500  text-white px-4 py-2 rounded hover:bg-blue-900 transition"
-                >
-                    <Plus size={16} />
-                    Agregar 
-                </button>
-            </div>
+  useEffect(() => {
+    const cargarDesdeFirebase = async () => {
+      try {
+        const snap = await getDocs(collection(db, "insumos"));
 
-            <div className="bg-white rounded-lg shadow overflow-x-auto">
-                <table className="w-full">
-                    <thead className="bg-gray-100 border-b">
-                        <tr>
-                            <th className="px-4 py-3 text-left text-sm font-semibold">Nombre</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold">Desripción</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold">Cantidad</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold">Precio de Venta</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                        {producto.map((producto) => (
-                            <tr key={producto.id} className="hover:bg-gray-50">
-                                <td className="px-4 py-3">{producto.nombre}</td>
-                                <td className="px-4 py-3">{producto.descripcion}</td>
-                                <td className="px-4 py-3">
-                                    {producto.cantidad} {producto.unidad}
-                                </td>
-                                <td className="px-4 py-3">${producto.precioVenta.toFixed(2)}</td>
-                                <td className="px-4 py-3 text-right">
-                                    <button
-                                        onClick={() => onEdit(producto)}
-                                        className="text-blue-600 hover:text-blue-800 p-1"
-                                        title="Editar"
-                                    >
-                                        <Edit2 size={16} />
-                                    </button>
-                                    <button
-                                        onClick={() => onDelete(producto.id)}
-                                        className="text-red-600 hover:text-red-800 p-1 ml-2"
-                                        title="Eliminar"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                {producto.length === 0 && (
-                    <div className="p-4 text-center text-gray-500">
-                        No hay productos registrados.
-                    </div>
-                )}
-            </div>
-        </div>
+        const data = snap.docs.map((doc) => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            nombre: d.nombre || "(Sin nombre)",
+            stock_actual: d.stock_actual ?? 0,
+            stock_minimo: d.stock_minimo ?? 0,
+            costo_unidad: d.costo_unidad ?? 0,
+            unidad_medida: d.unidad_medida || "",
+          };
+        });
+
+        setItems(data);
+      } catch (e) {
+        console.error("Error leyendo Firestore:", e);
+        setError("No se pudieron cargar los datos de Firebase.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarDesdeFirebase();
+  }, []);
+
+  const { totalUnidades, valorTotal, bajoStock } = useMemo(() => {
+    return items.reduce(
+      (acc, i) => {
+        acc.totalUnidades += Number(i.stock_actual || 0);
+        acc.valorTotal += Number(i.stock_actual || 0) * Number(i.costo_unidad || 0);
+        if (i.stock_actual <= i.stock_minimo) acc.bajoStock += 1;
+        return acc;
+      },
+      { totalUnidades: 0, valorTotal: 0, bajoStock: 0 }
     );
+  }, [items]);
+
+  if (loading) {
+    return (
+      <p className="p-6 text-center text-gray-500 animate-softFadeUp">
+        Cargando productos…
+      </p>
+    );
+  }
+
+  if (error) {
+    return <p className="p-4 text-red-600">{error}</p>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header + botón */}
+      <div className="flex justify-between items-center animate-softFadeUp">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+            Producto Terminado
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Vista general de tus insumos finales y su valor aproximado.
+          </p>
+        </div>
+
+        <button
+          onClick={onAdd}
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 text-white px-5 py-2.5 rounded-2xl shadow-lg hover:shadow-xl hover:brightness-110 active:scale-95 transition-all duration-200"
+        >
+          <Plus size={18} />
+          Agregar
+        </button>
+      </div>
+
+      {/* Tarjetitas resumen */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-softFadeUp">
+        <div className="bg-white/80 backdrop-blur rounded-2xl border border-blue-50 shadow-md px-4 py-3 flex flex-col gap-1">
+          <span className="text-xs font-semibold uppercase tracking-wide text-blue-500">
+            Unidades totales
+          </span>
+          <span className="text-lg font-bold text-gray-900">
+            {totalUnidades.toLocaleString()}
+          </span>
+        </div>
+
+        <div className="bg-white/80 backdrop-blur rounded-2xl border border-emerald-50 shadow-md px-4 py-3 flex flex-col gap-1">
+          <span className="text-xs font-semibold uppercase tracking-wide text-emerald-500">
+            Valor aproximado
+          </span>
+          <span className="text-lg font-bold text-gray-900">
+            ${valorTotal.toFixed(2)}
+          </span>
+        </div>
+
+        <div className="bg-white/80 backdrop-blur rounded-2xl border border-rose-50 shadow-md px-4 py-3 flex flex-col gap-1">
+          <span className="text-xs font-semibold uppercase tracking-wide text-rose-500">
+            Productos con bajo stock
+          </span>
+          <span className="text-lg font-bold text-gray-900">
+            {bajoStock}
+          </span>
+        </div>
+      </div>
+
+      {/* Tabla principal */}
+      <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-cardPop">
+        <table className="w-full">
+          <thead className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-gray-200">
+            <tr>
+              {["Nombre", "Cantidad", "Stock Mínimo", "Costo por Unidad"].map(
+                (h) => (
+                  <th
+                    key={h}
+                    className="px-6 py-3 text-left text-xs font-semibold text-gray-600 tracking-[0.08em] uppercase"
+                  >
+                    {h}
+                  </th>
+                )
+              )}
+            </tr>
+          </thead>
+
+          <tbody className="divide-y divide-gray-100">
+            {items.map((item, index) => (
+              <tr
+                key={item.id}
+                className="group hover:bg-indigo-50/60 transition-all duration-300 animate-rowFloat"
+                style={{ animationDelay: `${index * 0.04}s` }}
+              >
+                <td className="px-6 py-4 font-medium text-gray-900">
+                  <span className="group-hover:text-indigo-700 transition-colors">
+                    {item.nombre}
+                  </span>
+                </td>
+
+                <td className="px-6 py-4">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
+                      item.stock_actual <= item.stock_minimo
+                        ? "bg-rose-50 text-rose-700 border-rose-200 animate-softGlow"
+                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    }`}
+                  >
+                    {item.stock_actual} {item.unidad_medida}
+                  </span>
+                </td>
+
+                <td className="px-6 py-4 text-sm text-gray-700">
+                  {item.stock_minimo} {item.unidad_medida}
+                </td>
+
+                <td className="px-6 py-4">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-50 text-slate-800 text-sm font-semibold border border-slate-200">
+                    ${Number(item.costo_unidad).toFixed(2)}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {items.length === 0 && (
+          <p className="text-center text-gray-500 py-10">
+            No hay productos registrados
+          </p>
+        )}
+      </div>
+    </div>
+  );
 };

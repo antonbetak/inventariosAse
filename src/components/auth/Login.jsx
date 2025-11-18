@@ -11,7 +11,7 @@ export const Login = ({ onLogin }) => {
     e.preventDefault();
 
     // Credenciales temporales
-    if (username === "Eduardo" && password === "Edu123") {
+    if (username === "A" && password === "A") {
       onLogin({ username });
     } else {
       setError("Usuario o contraseña incorrectos");
