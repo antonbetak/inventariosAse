@@ -1,11 +1,8 @@
-// Importar Firebase App
+// src/utils/firebase.js
+
 import { initializeApp } from "firebase/app";
-
-// Importar Firestore
 import { getFirestore } from "firebase/firestore";
-
-// (Opcional) Analytics
-import { getAnalytics } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDE289Xmxr24iyUx52lsRqF4cPgZtKnMVc",
@@ -20,8 +17,8 @@ const firebaseConfig = {
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 
-// Inicializar Firestore y exportarlo
+// Firestore
 export const db = getFirestore(app);
 
-// Opcional: Analytics
-export const analytics = getAnalytics(app);
+// AUTH (LO QUE NECESITAS PARA EL LOGIN)
+export const auth = getAuth(app);

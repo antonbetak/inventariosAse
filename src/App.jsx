@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+// src/App.jsx
+import React, { useState, useEffect } from 'react';
 import { Local } from './hooks/Local';
 import { generarId } from './utils/generarId';
+
+// Firebase Auth
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from './utils/firebase';
 
 // Auth
 import { Login } from './components/auth/Login';
@@ -16,14 +21,19 @@ import { TablaMateriaPrima } from './components/materiaPrima/TablaMateriaPrima';
 import { MateriaPrima } from './components/materiaPrima/MateriaPrima';
 import { TablaProductoTerminado } from './components/productoTerminado/TablaProductoTerminado';
 import { ProductoTerminado } from './components/productoTerminado/productoTerminado';
-import { Reportes } from './components/Reportes/Reportes';   // 👈 ojo con esta ruta
+import { Reportes } from './components/Reportes/Reportes';
 
 function App() {
   // Estado de autenticación
   const [user, setUser] = useState(null);
+  const [checkingAuth, setCheckingAuth] = useState(true); // para saber si ya checamos Firebase
 
-  // Estados principales (todavía usados por Dashboard y popup)
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  // Pestaña activa: la cargamos de localStorage para “recordar” dónde estabas
+  const [activeTab, setActiveTab] = useState(
+    () => localStorage.getItem('activeTab') || 'Dashboard'
+  );
+
+  // Estados principales
   const [materiaPrima, setMateriaPrima] = Local('rawMaterials', []);
   const [productoTerminado, setProductoTerminado] = Local('products', []);
 
@@ -32,7 +42,50 @@ function App() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [popUpType, setPopUpType] = useState('');
 
-  // ---- Materia prima (estado local) ----
+  // ============================
+  // 🔐 Escuchar la sesión de Firebase
+  // ============================
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        // Si hay usuario en Firebase, lo guardamos en el estado
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          nombre: 'Administrador',
+        });
+      } else {
+        setUser(null);
+      }
+      setCheckingAuth(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // ============================
+  // 💾 Guardar la pestaña activa en localStorage
+  // ============================
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
+
+  // ============================
+  // 🔓 Logout (cerrar sesión)
+  // ============================
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error('Error al cerrar sesión:', e);
+    }
+    setUser(null);
+    setActiveTab('Dashboard');
+  };
+
+  // ============================
+  // Materia prima (estado local)
+  // ============================
   const anadirMateriaPrima = (materia) => {
     const nuevaMateria = {
       ...materia,
@@ -69,7 +122,9 @@ function App() {
     setIsPopUpOpen(true);
   };
 
-  // ---- Producto terminado (estado local) ----
+  // ============================
+  // Producto terminado (estado local)
+  // ============================
   const anadirProductoTerminado = (producto) => {
     const nuevoProducto = {
       ...producto,
@@ -111,19 +166,32 @@ function App() {
     setEditingProduct(null);
   };
 
+  // ============================
+  // Render
+  // ============================
+
+  // Mientras revisamos con Firebase si hay sesión activa
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-gray-600">Cargando...</p>
+      </div>
+    );
+  }
+
   // Si no hay usuario logueado, mostramos login
   if (!user) {
     return <Login onLogin={setUser} />;
   }
 
+  // Si hay usuario, mostramos la app
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <Header user={user} onLogout={() => setUser(null)} />
+      <Header user={user} onLogout={handleLogout} />
 
       <Navegacion activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="w-full py-8">
-        {/* Dashboard */}
         {activeTab === 'Dashboard' && (
           <Dashboard
             materiaPrima={materiaPrima}
@@ -131,7 +199,6 @@ function App() {
           />
         )}
 
-        {/* Entradas / Materia prima */}
         {activeTab === 'Materia Prima' && (
           <TablaMateriaPrima
             onAdd={handleNuevaMateriaPrima}
@@ -140,7 +207,6 @@ function App() {
           />
         )}
 
-        {/* Salidas / Producto terminado */}
         {activeTab === 'Producto Terminado' && (
           <TablaProductoTerminado
             onAdd={handleNuevoProductoTerminado}
@@ -149,11 +215,9 @@ function App() {
           />
         )}
 
-        {/* Reportes */}
         {activeTab === 'Reportes' && <Reportes />}
       </main>
 
-      {/* Modal */}
       <PopUp
         isOpen={isPopUpOpen}
         onClose={handleCerrarPopUp}

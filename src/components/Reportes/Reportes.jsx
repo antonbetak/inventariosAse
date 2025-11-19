@@ -10,11 +10,11 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 
 export const Reportes = () => {
   const [insumos, setInsumos] = useState([]);
+  const [entradas, setEntradas] = useState([]); // entradasMateriaPrima
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastExport, setLastExport] = useState(null);
@@ -22,17 +22,28 @@ export const Reportes = () => {
   useEffect(() => {
     const cargar = async () => {
       try {
-        const snap = await getDocs(collection(db, "insumos"));
+        const [snapInsumos, snapEntradas] = await Promise.all([
+          getDocs(collection(db, "insumos")),
+          getDocs(collection(db, "entradasMateriaPrima")),
+        ]);
 
-        const data = snap.docs.map((doc) => {
+        const LEAD_TIME_DIAS = 2; // mismo L que usas en el Excel
+
+        const dataInsumos = snapInsumos.docs.map((doc) => {
           const d = doc.data();
           const stock_actual = Number(d.stock_actual ?? 0);
-          const stock_minimo = Number(d.stock_minimo ?? 0);
-          const consumo_promedio = Number(d.consumo_promedio ?? 0);
+          const stock_minimo = Number(d.stock_minimo ?? 0); // SS
+          const consumo_promedio = Number(d.consumo_promedio ?? 0); // d
 
-          // lógica simple de reorden
-          const punto_reorden = stock_minimo || Math.ceil(consumo_promedio * 1.5);
-          const enRiesgo = stock_actual <= stock_minimo;
+          // Punto de reorden aproximado: R = d·L + SS
+          const punto_reorden =
+            consumo_promedio > 0 || stock_minimo > 0
+              ? Math.ceil(consumo_promedio * LEAD_TIME_DIAS + stock_minimo)
+              : 0;
+
+          // En riesgo cuando ya estás en o por debajo del punto de reorden
+          const enRiesgo =
+            punto_reorden > 0 ? stock_actual <= punto_reorden : false;
 
           return {
             id: doc.id,
@@ -48,9 +59,19 @@ export const Reportes = () => {
           };
         });
 
-        setInsumos(data);
+        const dataEntradas = snapEntradas.docs.map((doc) => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            ...d,
+            valor_total: Number(d.valor_total ?? d.valor ?? 0),
+          };
+        });
+
+        setInsumos(dataInsumos);
+        setEntradas(dataEntradas);
       } catch (e) {
-        console.error("Error leyendo insumos para reportes:", e);
+        console.error("Error leyendo datos para reportes:", e);
         setError("No se pudieron cargar los datos de Firebase.");
       } finally {
         setLoading(false);
@@ -60,7 +81,9 @@ export const Reportes = () => {
     cargar();
   }, []);
 
-  // KPIs para las tarjetitas
+  const formatCurrency = (n) =>
+    n.toLocaleString("es-MX", { style: "currency", currency: "MXN" });
+
   const resumen = useMemo(() => {
     return insumos.reduce(
       (acc, i) => {
@@ -74,16 +97,54 @@ export const Reportes = () => {
     );
   }, [insumos]);
 
-  // Datos para gráfica de reorden (top 7 por peor nivel de stock)
-  const datosGrafica = useMemo(() => {
-    const withRatio = insumos.map((i) => ({
-      ...i,
-      ratio: i.stock_minimo > 0 ? i.stock_actual / i.stock_minimo : 999,
-    }));
+  // Entradas → usan insumos (valor actual en inventario)
+  const resumenEntradas = useMemo(() => {
+    const registros = insumos.length;
+    const valor = insumos.reduce(
+      (acc, i) => acc + i.stock_actual * i.costo_unidad,
+      0
+    );
+    return { registros, valor };
+  }, [insumos]);
 
-    return withRatio
-      .sort((a, b) => a.ratio - b.ratio)
-      .slice(0, 7); // top 7 más críticos
+  // Salidas → usan entradasMateriaPrima
+  const resumenSalidas = useMemo(() => {
+    const registros = entradas.length;
+    const valor = entradas.reduce(
+      (acc, e) => acc + Number(e.valor_total ?? 0),
+      0
+    );
+    return { registros, valor };
+  }, [entradas]);
+
+  const reporteCompleto = useMemo(
+    () => ({
+      totalItems: resumen.totalInsumos,
+      valorTotal: resumen.valorTotal,
+    }),
+    [resumen]
+  );
+
+  // 🔹 Datos para la gráfica de reorden
+  const datosGrafica = useMemo(() => {
+    // Calculamos ratio vs punto de reorden: <= 1 → en o por debajo del reorden
+    const withRatio = insumos
+      .filter((i) => i.punto_reorden > 0)
+      .map((i) => ({
+        ...i,
+        ratio: i.stock_actual / i.punto_reorden,
+      }))
+      .sort((a, b) => a.ratio - b.ratio); // del más crítico al menos crítico
+
+    // Solo productos en o por debajo del punto de reorden
+    const enReorden = withRatio.filter((i) => i.ratio <= 1);
+
+    if (enReorden.length > 0) {
+      return enReorden.slice(0, 7); // top 7 realmente en reorden
+    }
+
+    // Si ninguno está en reorden, mostramos los 7 más cercanos
+    return withRatio.slice(0, 7);
   }, [insumos]);
 
   const handleExportCSV = () => {
@@ -93,9 +154,9 @@ export const Reportes = () => {
       "Nombre",
       "Categoría",
       "Stock actual",
-      "Stock mínimo",
-      "Consumo promedio",
-      "Punto de reorden",
+      "Stock mínimo (SS)",
+      "Consumo promedio (d)",
+      "Punto de reorden (R)",
       "Unidad",
       "Costo unidad",
       "Valor en inventario",
@@ -172,8 +233,8 @@ export const Reportes = () => {
             Reportes de inventario
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Exporta tu inventario a CSV y revisa visualmente los puntos de
-            reorden.
+            Descarga los reportes de tu inventario y revisa visualmente los
+            puntos de reorden.
           </p>
         </div>
 
@@ -186,87 +247,100 @@ export const Reportes = () => {
         </button>
       </div>
 
-      {/* Tarjetas resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-softFadeUp">
-        <div className="bg-white/80 backdrop-blur rounded-2xl border border-sky-50 shadow-md px-4 py-3 flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-wide text-sky-500">
-            Insumos
-          </span>
-          <span className="text-lg font-bold text-gray-900">
-            {resumen.totalInsumos}
-          </span>
+      {/* Cards resumen */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-softFadeUp">
+        {/* Entradas */}
+        <div className="bg-white rounded-3xl shadow-md border border-sky-50 p-5">
+          <h3 className="text-sm font-semibold text-gray-800 mb-1">Entradas</h3>
+          <p className="text-xs text-gray-500 mb-4">
+            Inventario actual con costos y unidades.
+          </p>
+          <p className="text-xs text-gray-600">
+            <strong>Registros:</strong> {resumenEntradas.registros}
+            <br />
+            <strong>Valor:</strong> {formatCurrency(resumenEntradas.valor)}
+          </p>
         </div>
 
-        <div className="bg-white/80 backdrop-blur rounded-2xl border border-indigo-50 shadow-md px-4 py-3 flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-wide text-indigo-500">
-            Unidades totales
-          </span>
-          <span className="text-lg font-bold text-gray-900">
-            {resumen.totalUnidades.toLocaleString()}
-          </span>
+        {/* Salidas */}
+        <div className="bg-white rounded-3xl shadow-md border border-emerald-50 p-5">
+          <h3 className="text-sm font-semibold text-gray-800 mb-1">Salidas</h3>
+          <p className="text-xs text-gray-500 mb-4">
+            Movimientos registrados en entradasMateriaPrima.
+          </p>
+          <p className="text-xs text-gray-600">
+            <strong>Registros:</strong> {resumenSalidas.registros}
+            <br />
+            <strong>Valor:</strong> {formatCurrency(resumenSalidas.valor)}
+          </p>
         </div>
 
-        <div className="bg-white/80 backdrop-blur rounded-2xl border border-emerald-50 shadow-md px-4 py-3 flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-wide text-emerald-500">
-            Valor inventario
-          </span>
-          <span className="text-lg font-bold text-gray-900">
-            ${resumen.valorTotal.toFixed(2)}
-          </span>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur rounded-2xl border border-rose-50 shadow-md px-4 py-3 flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-wide text-rose-500">
-            Necesitan reorden
-          </span>
-          <span className="text-lg font-bold text-gray-900">
-            {resumen.necesitanReorden}
-          </span>
+        {/* Reporte completo */}
+        <div className="bg-white rounded-3xl shadow-md border border-purple-50 p-5">
+          <h3 className="text-sm font-semibold text-gray-800 mb-1">
+            Reporte completo
+          </h3>
+          <p className="text-xs text-gray-500 mb-4">
+            Resumen total de inventario actual.
+          </p>
+          <p className="text-xs text-gray-600">
+            <strong>Total items:</strong> {reporteCompleto.totalItems}
+            <br />
+            <strong>Valor total:</strong>{" "}
+            {formatCurrency(reporteCompleto.valorTotal)}
+          </p>
         </div>
       </div>
 
       {/* Gráfica de reorden */}
-      <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-gray-100 p-5 space-y-3 animate-cardPop">
-        <div className="flex justify-between items-center">
+      <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-gray-100 p-5 mt-6">
+        <div className="flex justify-between items-center mb-3">
           <h3 className="text-sm font-semibold text-gray-800 tracking-wide uppercase">
             Gráfica de reorden (stock vs mínimo)
           </h3>
           <span className="text-xs text-gray-400">
-            Mostrando los {datosGrafica.length} más críticos
+            Mostrando los {datosGrafica.length} insumos más cercanos o en
+            punto de reorden
           </span>
         </div>
 
-        {datosGrafica.length === 0 ? (
-          <p className="text-center text-gray-500 py-6">
-            No hay insumos con información suficiente para graficar.
-          </p>
-        ) : (
-          <div className="w-full h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={datosGrafica}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="nombre" angle={-15} textAnchor="end" height={60} />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="stock_actual" name="Stock actual" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="stock_minimo" name="Stock mínimo" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+        <div className="w-full h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={datosGrafica}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="nombre"
+                angle={-15}
+                textAnchor="end"
+                height={60}
+              />
+              <YAxis />
+              <Tooltip />
+              <Bar
+                dataKey="stock_actual"
+                name="Stock actual"
+                radius={[8, 8, 0, 0]}
+              />
+              <Bar
+                dataKey="punto_reorden"
+                name="Punto de reorden (R)"
+                radius={[8, 8, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      {/* Tabla resumida */}
-      <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-cardPop">
+      {/* Tabla */}
+      <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
         <table className="w-full">
           <thead className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-gray-200">
             <tr>
               {[
                 "Nombre",
                 "Stock",
-                "Mínimo",
-                "Punto reorden",
+                "Mínimo (SS)",
+                "Punto reorden (R)",
                 "Consumo prom.",
                 "Costo",
                 "En riesgo",
@@ -281,43 +355,34 @@ export const Reportes = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {insumos.map((i, idx) => (
+            {insumos.map((i) => (
               <tr
                 key={i.id}
-                className="group hover:bg-indigo-50/60 transition-all duration-300 animate-rowFloat"
-                style={{ animationDelay: `${idx * 0.03}s` }}
+                className="group hover:bg-indigo-50/60 transition-all duration-300"
               >
                 <td className="px-4 md:px-6 py-3 font-medium text-gray-900">
-                  <span className="group-hover:text-indigo-700 transition-colors">
-                    {i.nombre}
-                  </span>
+                  {i.nombre}
                 </td>
-
                 <td className="px-4 md:px-6 py-3 text-sm">
                   {i.stock_actual} {i.unidad_medida}
                 </td>
-
-                <td className="px-4 md:px-6 py-3 text-sm text-gray-700">
-                  {i.stock_minimo} {i.unidad_medida}
+                <td className="px-4 md:px-6 py-3 text-sm">
+                  {i.stock_minimo}
                 </td>
-
-                <td className="px-4 md:px-6 py-3 text-sm text-gray-700">
-                  {i.punto_reorden} {i.unidad_medida}
+                <td className="px-4 md:px-6 py-3 text-sm">
+                  {i.punto_reorden}
                 </td>
-
-                <td className="px-4 md:px-6 py-3 text-sm text-gray-700">
+                <td className="px-4 md:px-6 py-3 text-sm">
                   {i.consumo_promedio || "-"}
                 </td>
-
-                <td className="px-4 md:px-6 py-3 text-sm text-gray-800">
+                <td className="px-4 md:px-6 py-3 text-sm">
                   ${i.costo_unidad.toFixed(2)}
                 </td>
-
                 <td className="px-4 md:px-6 py-3">
                   <span
                     className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
                       i.enRiesgo
-                        ? "bg-rose-50 text-rose-700 border-rose-200 animate-softGlow"
+                        ? "bg-rose-50 text-rose-700 border-rose-200"
                         : "bg-emerald-50 text-emerald-700 border-emerald-200"
                     }`}
                   >
@@ -330,18 +395,19 @@ export const Reportes = () => {
         </table>
 
         {insumos.length === 0 && (
-          <p className="text-center text-gray-500 py-10">
+          <p className="text-center text-gray-500 py-8">
             No hay información de insumos para mostrar.
           </p>
         )}
       </div>
 
-      {/* mini historial de exportación */}
       {lastExport && (
         <p className="text-xs text-gray-400 text-right">
-          Última exportación: {lastExport.fecha} · {lastExport.registros} registros
+          Última exportación: {lastExport.fecha} · {lastExport.registros}{" "}
+          registros
         </p>
       )}
     </div>
   );
 };
+
