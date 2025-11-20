@@ -10,27 +10,73 @@ import {
 } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 
+// =======================================================
+// CONFIGURACIÓN DE PRODUCTOS Y RECETAS AUTOMÁTICAS
+// =======================================================
+
+// Productos finales
+const PRODUCTOS = [
+  { id: "garrafon20", nombre: "Garrafón de 20 litros" },
+  { id: "botella1L", nombre: "Agua de 1 litro" },
+  { id: "botella500", nombre: "Agua de 500 mL" },
+];
+
+// RECETAS AUTOMÁTICAS DEFINITIVAS
+const RECETAS_BASE = {
+  garrafon20: [
+    { nombreInsumo: "TAPA #54 CON CINTILLO", cantidadPorUnidad: 1 },
+    { nombreInsumo: "ETIQUETA DE GARRAFÓN", cantidadPorUnidad: 1 },
+    { nombreInsumo: "SELLO TERMOENCOGIBLE", cantidadPorUnidad: 1 },
+
+    // Valores realistas por garrafón (kg, gal, litros)
+    { nombreInsumo: "SALES", cantidadPorUnidad: 0.018 },          // kg
+    { nombreInsumo: "LAVADIN INTERNO", cantidadPorUnidad: 0.005 },// gal
+    { nombreInsumo: "LAVADIN EXTERNO", cantidadPorUnidad: 0.003 },// gal
+    { nombreInsumo: "OXIDÍN", cantidadPorUnidad: 0.002 },         // litros
+    { nombreInsumo: "PIPA DE AGUA POTABLE", cantidadPorUnidad: 0.020 }, // litros
+  ],
+
+  botella1L: [
+    { nombreInsumo: "BOTELLA DE AGUA DE 1 LT", cantidadPorUnidad: 1 },
+    { nombreInsumo: "TAPA DE BOTELLA DE AGUA", cantidadPorUnidad: 1 },
+    { nombreInsumo: "ETIQUETA DE BOTELLAS DE AGUA", cantidadPorUnidad: 1 },
+
+    { nombreInsumo: "SALES", cantidadPorUnidad: 0.003 }, // 3 g
+  ],
+
+  botella500: [
+    { nombreInsumo: "BOTELLA DE AGUA DE 500 ML", cantidadPorUnidad: 1 },
+    { nombreInsumo: "TAPA DE BOTELLA DE AGUA", cantidadPorUnidad: 1 },
+    { nombreInsumo: "ETIQUETA DE BOTELLAS DE AGUA", cantidadPorUnidad: 1 },
+
+    { nombreInsumo: "SALES", cantidadPorUnidad: 0.002 }, // 2 g
+  ],
+};
+
+// =======================================================
+// COMPONENTE PRINCIPAL
+// =======================================================
+
 export const ProductoTerminado = ({ onCancel }) => {
-  const [materiaPrima, setMateriaPrima] = useState([]);   // insumos de Firebase
+  const [materiaPrima, setMateriaPrima] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [mensaje, setMensaje] = useState("");
 
-  // Datos del producto terminado
   const [formData, setFormData] = useState({
+    productoId: "",
     nombre: "",
     cantidad: "",
     unidad: "unidades",
     precioVenta: "",
     descripcion: "",
-    insumos: [], // { id, nombre, cantidadUsada, unidad }
+    insumos: [],
   });
 
-  // Controles para agregar insumos
   const [insumoSeleccionado, setInsumoSeleccionado] = useState("");
   const [cantidadInsumo, setCantidadInsumo] = useState("");
 
-  // 1) Cargar insumos desde Firebase
+  // Cargar insumos desde Firebase
   useEffect(() => {
     const cargar = async () => {
       try {
@@ -39,7 +85,6 @@ export const ProductoTerminado = ({ onCancel }) => {
           id: d.id,
           ...d.data(),
         }));
-        console.log("Materia prima:", data);
         setMateriaPrima(data);
       } catch (err) {
         console.error("Error obteniendo insumos:", err);
@@ -52,43 +97,82 @@ export const ProductoTerminado = ({ onCancel }) => {
     cargar();
   }, []);
 
+  // =======================================================
+  // CARGAR RECETA AUTOMÁTICA
+  // =======================================================
+  const aplicarRecetaAutomatica = () => {
+    setMensaje("");
+
+    if (!formData.productoId) {
+      setMensaje("Selecciona un producto antes de cargar receta.");
+      return;
+    }
+
+    const cantidadProducto = parseFloat(formData.cantidad);
+    if (isNaN(cantidadProducto) || cantidadProducto <= 0) {
+      setMensaje("Captura primero la cantidad del producto.");
+      return;
+    }
+
+    const receta = RECETAS_BASE[formData.productoId];
+
+    const insumosFinal = [];
+
+    for (const item of receta) {
+      const insumoDoc = materiaPrima.find(
+        (m) =>
+          m.nombre.trim().toUpperCase() ===
+          item.nombreInsumo.trim().toUpperCase()
+      );
+
+      if (!insumoDoc) {
+        setMensaje(`No se encontró en Firebase: ${item.nombreInsumo}`);
+        return;
+      }
+
+      const total = cantidadProducto * item.cantidadPorUnidad;
+
+      if (total > insumoDoc.stock_actual) {
+        setMensaje(
+          `No hay stock suficiente de ${insumoDoc.nombre}. Disponible: ${insumoDoc.stock_actual}`
+        );
+        return;
+      }
+
+      insumosFinal.push({
+        id: insumoDoc.id,
+        nombre: insumoDoc.nombre,
+        cantidadUsada: total,
+        unidad: insumoDoc.unidad_medida,
+      });
+    }
+
+    setFormData((prev) => ({ ...prev, insumos: insumosFinal }));
+    setMensaje("Receta automática cargada correctamente.");
+  };
+
+  // =======================================================
+  // AGREGAR INSUMO MANUAL
+  // =======================================================
   const agregarInsumo = () => {
     setMensaje("");
 
     if (!insumoSeleccionado || !cantidadInsumo) {
-      setMensaje("Selecciona un insumo y una cantidad válida.");
-      return;
-    }
-
-    const cantidadNum = parseFloat(cantidadInsumo);
-    if (isNaN(cantidadNum) || cantidadNum <= 0) {
-      setMensaje("La cantidad del insumo debe ser mayor a 0.");
+      setMensaje("Selecciona un insumo y cantidad.");
       return;
     }
 
     const materia = materiaPrima.find((m) => m.id === insumoSeleccionado);
-    if (!materia) {
-      setMensaje("Insumo no encontrado.");
-      return;
-    }
+    const cantidadNum = parseFloat(cantidadInsumo);
 
-    const stockActual = Number(materia.stock_actual ?? 0);
-
-    if (cantidadNum > stockActual) {
+    if (cantidadNum > materia.stock_actual) {
       setMensaje(
-        `No hay suficiente ${materia.nombre}. Disponible: ${stockActual} ${materia.unidad_medida}`
+        `No hay suficiente stock de ${materia.nombre}. Disponible: ${materia.stock_actual}`
       );
       return;
     }
 
-    // Evitar duplicado
-    const yaExiste = formData.insumos.find((i) => i.id === insumoSeleccionado);
-    if (yaExiste) {
-      setMensaje("Este insumo ya fue agregado.");
-      return;
-    }
-
-    const nuevoInsumo = {
+    const nuevo = {
       id: materia.id,
       nombre: materia.nombre,
       cantidadUsada: cantidadNum,
@@ -97,264 +181,224 @@ export const ProductoTerminado = ({ onCancel }) => {
 
     setFormData((prev) => ({
       ...prev,
-      insumos: [...prev.insumos, nuevoInsumo],
+      insumos: [...prev.insumos, nuevo],
     }));
 
     setInsumoSeleccionado("");
     setCantidadInsumo("");
   };
 
-  const eliminarInsumo = (idInsumo) => {
+  const eliminarInsumo = (id) => {
     setFormData((prev) => ({
       ...prev,
-      insumos: prev.insumos.filter((i) => i.id !== idInsumo),
+      insumos: prev.insumos.filter((x) => x.id !== id),
     }));
   };
 
-  // 2) Guardar producto terminado + descontar insumos
+  // =======================================================
+  // GUARDAR EN FIREBASE + DESCONTAR STOCK
+  // =======================================================
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje("");
 
     if (!formData.nombre || !formData.cantidad || !formData.precioVenta) {
-      setMensaje("Completa nombre, cantidad y precio de venta.");
+      setMensaje("Completa nombre, cantidad y precio.");
       return;
     }
 
     if (formData.insumos.length === 0) {
-      setMensaje("Agrega al menos un insumo utilizado.");
+      setMensaje("Agrega insumos o usa receta automática.");
       return;
-    }
-
-    const cantidadProducto = parseFloat(formData.cantidad);
-    const precioVentaNum = parseFloat(formData.precioVenta);
-
-    if (isNaN(cantidadProducto) || cantidadProducto <= 0) {
-      setMensaje("La cantidad del producto debe ser mayor a 0.");
-      return;
-    }
-    if (isNaN(precioVentaNum) || precioVentaNum <= 0) {
-      setMensaje("El precio de venta debe ser mayor a 0.");
-      return;
-    }
-
-    // Verificar stock de todos los insumos antes de hacer updates
-    for (const insumo of formData.insumos) {
-      const materia = materiaPrima.find((m) => m.id === insumo.id);
-      const stockActual = Number(materia?.stock_actual ?? 0);
-      if (!materia || stockActual < insumo.cantidadUsada) {
-        setMensaje(
-          `No hay stock suficiente de ${materia?.nombre ?? "algún insumo"}.`
-        );
-        return;
-      }
     }
 
     try {
       setSaving(true);
 
-      // 2.1 Crear el producto terminado (ajusta el nombre de la colección si quieres)
+      // Crear salida
       await addDoc(collection(db, "productosTerminados"), {
-        nombre: formData.nombre,
-        cantidad: cantidadProducto,
-        unidad: formData.unidad,
-        precioVenta: precioVentaNum,
-        descripcion: formData.descripcion,
-        insumos: formData.insumos, // se guarda el detalle de qué se usó
+        ...formData,
+        cantidad: parseFloat(formData.cantidad),
+        precioVenta: parseFloat(formData.precioVenta),
         creadoEn: new Date(),
       });
 
-      // 2.2 Descontar insumos en Firebase
-      const updates = formData.insumos.map(async (insumo) => {
-        const materia = materiaPrima.find((m) => m.id === insumo.id);
-        const stockActual = Number(materia.stock_actual ?? 0);
-        const nuevoStock = stockActual - insumo.cantidadUsada;
+      // Descontar insumos
+      await Promise.all(
+        formData.insumos.map(async (ins) => {
+          const materia = materiaPrima.find((m) => m.id === ins.id);
+          const nuevo = materia.stock_actual - ins.cantidadUsada;
 
-        await updateDoc(doc(db, "insumos", insumo.id), {
-          stock_actual: nuevoStock,
-        });
+          await updateDoc(doc(db, "insumos", ins.id), {
+            stock_actual: nuevo,
+          });
+        })
+      );
 
-        // Actualizar estado local
-        setMateriaPrima((prev) =>
-          prev.map((m) =>
-            m.id === insumo.id ? { ...m, stock_actual: nuevoStock } : m
-          )
-        );
-      });
-
-      await Promise.all(updates);
-
-      setMensaje("Producto guardado y stock actualizado ✅");
-      // Si quieres cerrar el modal al guardar:
-      // onCancel();
+      setMensaje("Salida registrada y stock actualizado ✓");
     } catch (err) {
-      console.error("Error guardando producto:", err);
-      setMensaje("Ocurrió un error al guardar el producto.");
+      console.error(err);
+      setMensaje("Error guardando producto.");
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) {
-    return <p className="p-4">Cargando insumos...</p>;
-  }
+  if (loading) return <p>Cargando insumos...</p>;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Nombre del producto */}
+      {/* PRODUCTO */}
       <div>
-        <label className="block text-sm font-medium mb-1">
-          Nombre del producto
-        </label>
-        <input
-          type="text"
+        <label className="block text-sm font-medium">Producto</label>
+        <select
+          value={formData.productoId}
+          onChange={(e) => {
+            const prod = PRODUCTOS.find((p) => p.id === e.target.value);
+            setFormData((prev) => ({
+              ...prev,
+              productoId: e.target.value,
+              nombre: prod?.nombre || "",
+            }));
+          }}
           required
-          value={formData.nombre}
+          className="w-full px-3 py-2 border rounded-lg"
+        >
+          <option value="">Selecciona un producto...</option>
+          {PRODUCTOS.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.nombre}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* CANTIDAD */}
+      <div>
+        <label className="block text-sm font-medium">Cantidad</label>
+        <input
+          type="number"
+          step="0.01"
+          className="w-full px-3 py-2 border rounded-lg"
+          value={formData.cantidad}
           onChange={(e) =>
-            setFormData((prev) => ({ ...prev, nombre: e.target.value }))
+            setFormData((prev) => ({ ...prev, cantidad: e.target.value }))
           }
-          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+          required
         />
       </div>
 
-      {/* Cantidad + unidad */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Cantidad</label>
-          <input
-            type="number"
-            required
-            step="0.01"
-            value={formData.cantidad}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, cantidad: e.target.value }))
-            }
-            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Unidad</label>
-          <select
-            value={formData.unidad}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, unidad: e.target.value }))
-            }
-            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-          >
-            <option value="unidades">unidades</option>
-            <option value="kg">kg</option>
-            <option value="L">litros</option>
-            <option value="cajas">cajas</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Precio de venta */}
+      {/* PRECIO */}
       <div>
-        <label className="block text-sm font-medium mb-1">
-          Precio de venta (MXN)
-        </label>
+        <label className="block text-sm font-medium">Precio venta (MXN)</label>
         <input
           type="number"
-          required
           step="0.01"
+          className="w-full px-3 py-2 border rounded-lg"
           value={formData.precioVenta}
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, precioVenta: e.target.value }))
           }
-          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+          required
         />
       </div>
 
-      {/* Descripción */}
+      {/* DESCRIPCIÓN */}
       <div>
-        <label className="block text-sm font-medium mb-1">Descripción</label>
+        <label className="block text-sm font-medium">Descripción</label>
         <textarea
+          className="w-full px-3 py-2 border rounded-lg"
+          rows="2"
           value={formData.descripcion}
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, descripcion: e.target.value }))
           }
-          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-          rows="2"
         />
       </div>
 
-      {/* Sección de insumos utilizados */}
-      <div className="border-t pt-4">
-        <h4 className="font-semibold mb-3">Insumos utilizados</h4>
+      {/* BOTÓN RECETA AUTOMÁTICA */}
+      <button
+        type="button"
+        onClick={aplicarRecetaAutomatica}
+        className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+      >
+        Cargar automáticamente
+      </button>
 
-        {/* Agregar insumo */}
-        <div className="flex gap-2 mb-3">
-          <select
-            value={insumoSeleccionado}
-            onChange={(e) => setInsumoSeleccionado(e.target.value)}
-            className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-          >
-            <option value="">Seleccionar insumo...</option>
-            {materiaPrima.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.nombre} (Disponible: {m.stock_actual} {m.unidad_medida})
-              </option>
-            ))}
-          </select>
+      {/* INSUMOS */}
+      <h3 className="font-semibold pt-4">Insumos utilizados</h3>
 
-          <input
-            type="number"
-            step="0.01"
-            placeholder="Cantidad"
-            value={cantidadInsumo}
-            onChange={(e) => setCantidadInsumo(e.target.value)}
-            className="w-24 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-          />
+      <div className="flex gap-2">
+        <select
+          value={insumoSeleccionado}
+          onChange={(e) => setInsumoSeleccionado(e.target.value)}
+          className="flex-1 px-3 py-2 border rounded-lg"
+        >
+          <option value="">Selecciona un insumo...</option>
+          {materiaPrima.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.nombre} — {m.stock_actual} {m.unidad_medida}
+            </option>
+          ))}
+        </select>
 
-          <button
-            type="button"
-            onClick={agregarInsumo}
-            className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-          >
-            <Plus size={18} />
-          </button>
-        </div>
+        <input
+          type="number"
+          step="0.01"
+          placeholder="Cantidad"
+          value={cantidadInsumo}
+          onChange={(e) => setCantidadInsumo(e.target.value)}
+          className="w-24 px-3 py-2 border rounded-lg"
+        />
 
-        {/* Lista de insumos ya agregados */}
-        {formData.insumos.length > 0 ? (
-          <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-            {formData.insumos.map((ins) => (
-              <div
-                key={ins.id}
-                className="flex justify-between items-center bg-white p-2 rounded border"
-              >
-                <span className="text-sm">
-                  <strong>{ins.nombre}:</strong> {ins.cantidadUsada} {ins.unidad}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => eliminarInsumo(ins.id)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-400 text-sm text-center py-2">
-            No se han agregado insumos
-          </p>
-        )}
+        <button
+          type="button"
+          onClick={agregarInsumo}
+          className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          <Plus size={18} />
+        </button>
       </div>
 
+      {/* LISTA DE INSUMOS */}
+      {formData.insumos.length > 0 ? (
+        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+          {formData.insumos.map((ins) => (
+            <div
+              key={ins.id}
+              className="flex justify-between items-center bg-white p-2 rounded border"
+            >
+              <span className="text-sm">
+                <strong>{ins.nombre}:</strong> {ins.cantidadUsada} {ins.unidad}
+              </span>
+              <button
+                type="button"
+                onClick={() => eliminarInsumo(ins.id)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-400 text-sm text-center py-2">
+          No se han agregado insumos
+        </p>
+      )}
+
+      {/* MENSAJE */}
       {mensaje && (
         <p
           className={`text-sm ${
-            mensaje.includes("✅") ? "text-green-600" : "text-red-600"
+            mensaje.includes("✓") ? "text-green-600" : "text-red-600"
           }`}
         >
           {mensaje}
         </p>
       )}
 
+      {/* BOTONES */}
       <div className="flex gap-2 pt-4">
         <button
           type="submit"

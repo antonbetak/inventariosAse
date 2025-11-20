@@ -14,7 +14,7 @@ import {
 
 export const Reportes = () => {
   const [insumos, setInsumos] = useState([]);
-  const [entradas, setEntradas] = useState([]); // entradasMateriaPrima
+  const [entradas, setEntradas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastExport, setLastExport] = useState(null);
@@ -27,21 +27,19 @@ export const Reportes = () => {
           getDocs(collection(db, "entradasMateriaPrima")),
         ]);
 
-        const LEAD_TIME_DIAS = 2; // mismo L que usas en el Excel
+        const LEAD_TIME_DIAS = 2;
 
         const dataInsumos = snapInsumos.docs.map((doc) => {
           const d = doc.data();
           const stock_actual = Number(d.stock_actual ?? 0);
-          const stock_minimo = Number(d.stock_minimo ?? 0); // SS
-          const consumo_promedio = Number(d.consumo_promedio ?? 0); // d
+          const stock_minimo = Number(d.stock_minimo ?? 0);
+          const consumo_promedio = Number(d.consumo_promedio ?? 0);
 
-          // Punto de reorden aproximado: R = d·L + SS
           const punto_reorden =
             consumo_promedio > 0 || stock_minimo > 0
               ? Math.ceil(consumo_promedio * LEAD_TIME_DIAS + stock_minimo)
               : 0;
 
-          // En riesgo cuando ya estás en o por debajo del punto de reorden
           const enRiesgo =
             punto_reorden > 0 ? stock_actual <= punto_reorden : false;
 
@@ -54,6 +52,7 @@ export const Reportes = () => {
             consumo_promedio,
             costo_unidad: Number(d.costo_unidad ?? 0),
             unidad_medida: d.unidad_medida || "",
+            merma_mensual: Number(d.merma_mensual ?? 0), // 👈 merma desde Firebase
             punto_reorden,
             enRiesgo,
           };
@@ -97,7 +96,6 @@ export const Reportes = () => {
     );
   }, [insumos]);
 
-  // Entradas → usan insumos (valor actual en inventario)
   const resumenEntradas = useMemo(() => {
     const registros = insumos.length;
     const valor = insumos.reduce(
@@ -107,7 +105,6 @@ export const Reportes = () => {
     return { registros, valor };
   }, [insumos]);
 
-  // Salidas → usan entradasMateriaPrima
   const resumenSalidas = useMemo(() => {
     const registros = entradas.length;
     const valor = entradas.reduce(
@@ -125,28 +122,32 @@ export const Reportes = () => {
     [resumen]
   );
 
-  // 🔹 Datos para la gráfica de reorden
+  // 🔹 Datos para la gráfica de reorden (LA MISMA QUE TENÍAS)
   const datosGrafica = useMemo(() => {
-    // Calculamos ratio vs punto de reorden: <= 1 → en o por debajo del reorden
     const withRatio = insumos
       .filter((i) => i.punto_reorden > 0)
       .map((i) => ({
         ...i,
         ratio: i.stock_actual / i.punto_reorden,
       }))
-      .sort((a, b) => a.ratio - b.ratio); // del más crítico al menos crítico
+      .sort((a, b) => a.ratio - b.ratio);
 
-    // Solo productos en o por debajo del punto de reorden
     const enReorden = withRatio.filter((i) => i.ratio <= 1);
 
-    if (enReorden.length > 0) {
-      return enReorden.slice(0, 7); // top 7 realmente en reorden
-    }
-
-    // Si ninguno está en reorden, mostramos los 7 más cercanos
-    return withRatio.slice(0, 7);
+    return enReorden.length > 0
+      ? enReorden.slice(0, 7)
+      : withRatio.slice(0, 7);
   }, [insumos]);
 
+  // 🔹 Top 3 productos con mayor merma
+  const topMerma = useMemo(() => {
+    return [...insumos]
+      .filter((i) => i.merma_mensual > 0)
+      .sort((a, b) => b.merma_mensual - a.merma_mensual)
+      .slice(0, 3);
+  }, [insumos]);
+
+  // ✔️ Exportar CSV con merma
   const handleExportCSV = () => {
     if (insumos.length === 0) return;
 
@@ -160,6 +161,7 @@ export const Reportes = () => {
       "Unidad",
       "Costo unidad",
       "Valor en inventario",
+      "Merma mensual (%)",
       "En riesgo reorden",
     ];
 
@@ -175,6 +177,7 @@ export const Reportes = () => {
         i.unidad_medida,
         i.costo_unidad,
         valor.toFixed(2),
+        (i.merma_mensual * 100).toFixed(2) + "%",
         i.enRiesgo ? "Sí" : "No",
       ];
     });
@@ -247,8 +250,8 @@ export const Reportes = () => {
         </button>
       </div>
 
-      {/* Cards resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-softFadeUp">
+      {/* Cards resumen (ahora 4 columnas con top merma) */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-softFadeUp">
         {/* Entradas */}
         <div className="bg-white rounded-3xl shadow-md border border-sky-50 p-5">
           <h3 className="text-sm font-semibold text-gray-800 mb-1">Entradas</h3>
@@ -258,7 +261,8 @@ export const Reportes = () => {
           <p className="text-xs text-gray-600">
             <strong>Registros:</strong> {resumenEntradas.registros}
             <br />
-            
+            <strong>Valor inventario:</strong>{" "}
+            {formatCurrency(resumenEntradas.valor)}
           </p>
         </div>
 
@@ -271,7 +275,8 @@ export const Reportes = () => {
           <p className="text-xs text-gray-600">
             <strong>Registros:</strong> {resumenSalidas.registros}
             <br />
-            
+            <strong>Valor movimientos:</strong>{" "}
+            {formatCurrency(resumenSalidas.valor)}
           </p>
         </div>
 
@@ -290,9 +295,36 @@ export const Reportes = () => {
             {formatCurrency(reporteCompleto.valorTotal)}
           </p>
         </div>
+
+        {/* Top 3 merma */}
+        <div className="bg-white rounded-3xl shadow-md border border-rose-50 p-5">
+          <h3 className="text-sm font-semibold text-gray-800 mb-1">
+            Top 3 merma mensual
+          </h3>
+          <p className="text-xs text-gray-500 mb-3">
+            Insumos con mayor porcentaje de merma.
+          </p>
+          <ul className="text-xs text-gray-700 space-y-1">
+            {topMerma.length === 0 ? (
+              <li>No hay datos de merma registrados.</li>
+            ) : (
+              topMerma.map((i, idx) => (
+                <li key={i.id} className="flex justify-between">
+                  <span>
+                    <span className="font-semibold">{idx + 1}.</span>{" "}
+                    {i.nombre}
+                  </span>
+                  <span className="font-semibold">
+                    {(i.merma_mensual * 100).toFixed(2)}%
+                  </span>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
       </div>
 
-      {/* Gráfica de reorden */}
+      {/* Gráfica de reorden (NO SE TOCA 😌) */}
       <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-gray-100 p-5 mt-6">
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-sm font-semibold text-gray-800 tracking-wide uppercase">
@@ -331,7 +363,7 @@ export const Reportes = () => {
         </div>
       </div>
 
-      {/* Tabla */}
+      {/* Tabla con merma */}
       <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
         <table className="w-full">
           <thead className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-gray-200">
@@ -343,6 +375,7 @@ export const Reportes = () => {
                 "Punto reorden (R)",
                 "Consumo prom.",
                 "Costo",
+                "Merma (%)",
                 "En riesgo",
               ].map((h) => (
                 <th
@@ -378,6 +411,9 @@ export const Reportes = () => {
                 <td className="px-4 md:px-6 py-3 text-sm">
                   ${i.costo_unidad.toFixed(2)}
                 </td>
+                <td className="px-4 md:px-6 py-3 text-sm">
+                  {(i.merma_mensual * 100).toFixed(2)}%
+                </td>
                 <td className="px-4 md:px-6 py-3">
                   <span
                     className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
@@ -410,4 +446,3 @@ export const Reportes = () => {
     </div>
   );
 };
-

@@ -155,19 +155,20 @@ export const MateriaPrima = ({ onCancel, onSaved }) => {
       {mensaje && <p className="text-sm">{mensaje}</p>}
 
       <div className="flex gap-2">
+        {/* Botón principal con el diseño del logout */}
         <button
           type="submit"
           disabled={saving}
-          className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-60"
+          className="flex-1 flex items-center justify-center space-x-2 bg-blue-500 hover:bg-blue-900 text-white font-semibold px-4 py-2 rounded-md shadow transition duration-150 disabled:opacity-60"
         >
-          {saving ? "Guardando..." : "Registrar"}
+          <span>{saving ? "Guardando..." : "Registrar"}</span>
         </button>
 
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 bg-gray-300 py-2 rounded-lg"
+            className="flex-1 bg-gray-300 py-2 rounded-lg hover:bg-gray-400 transition"
           >
             Cancelar
           </button>

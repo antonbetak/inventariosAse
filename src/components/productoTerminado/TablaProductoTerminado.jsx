@@ -1,31 +1,33 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 
 export const TablaProductoTerminado = ({ onAdd }) => {
-  const [items, setItems] = useState([]);
+  const [salidas, setSalidas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // ================================
+  // Cargar historial desde Firebase
+  // ================================
   useEffect(() => {
-    const cargarDesdeFirebase = async () => {
+    const cargarSalidas = async () => {
       try {
-        const snap = await getDocs(collection(db, "insumos"));
+        const snap = await getDocs(collection(db, "productosTerminados"));
+        const data = snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
-        const data = snap.docs.map((doc) => {
-          const d = doc.data();
-          return {
-            id: doc.id,
-            nombre: d.nombre || "(Sin nombre)",
-            stock_actual: d.stock_actual ?? 0,
-            stock_minimo: d.stock_minimo ?? 0,
-            costo_unidad: d.costo_unidad ?? 0,
-            unidad_medida: d.unidad_medida || "",
-          };
-        });
+        // Ordenar por fecha (más nuevos primero)
+        data.sort(
+          (a, b) =>
+            (b.creadoEn?.toDate?.() ?? new Date()) -
+            (a.creadoEn?.toDate?.() ?? new Date())
+        );
 
-        setItems(data);
+        setSalidas(data);
       } catch (e) {
         console.error("Error leyendo Firestore:", e);
         setError("No se pudieron cargar los datos de Firebase.");
@@ -34,32 +36,17 @@ export const TablaProductoTerminado = ({ onAdd }) => {
       }
     };
 
-    cargarDesdeFirebase();
+    cargarSalidas();
   }, []);
 
-  const { totalUnidades, valorTotal, bajoStock } = useMemo(() => {
-    return items.reduce(
-      (acc, i) => {
-        acc.totalUnidades += Number(i.stock_actual || 0);
-        acc.valorTotal += Number(i.stock_actual || 0) * Number(i.costo_unidad || 0);
-        if (i.stock_actual <= i.stock_minimo) acc.bajoStock += 1;
-        return acc;
-      },
-      { totalUnidades: 0, valorTotal: 0, bajoStock: 0 }
-    );
-  }, [items]);
-
-  if (loading) {
+  if (loading)
     return (
       <p className="p-6 text-center text-gray-500 animate-softFadeUp">
-        Cargando productos…
+        Cargando historial…
       </p>
     );
-  }
 
-  if (error) {
-    return <p className="p-4 text-red-600">{error}</p>;
-  }
+  if (error) return <p className="p-4 text-red-600">{error}</p>;
 
   return (
     <div className="space-y-6">
@@ -67,10 +54,10 @@ export const TablaProductoTerminado = ({ onAdd }) => {
       <div className="flex justify-between items-center animate-softFadeUp">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-            Producto Terminado
+            Historial de Salidas
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Vista general de tus insumos finales y su valor aproximado.
+            Registros de producción y venta generados recientemente.
           </p>
         </div>
 
@@ -83,42 +70,12 @@ export const TablaProductoTerminado = ({ onAdd }) => {
         </button>
       </div>
 
-      {/* Tarjetitas resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-softFadeUp">
-        <div className="bg-white/80 backdrop-blur rounded-2xl border border-blue-50 shadow-md px-4 py-3 flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-wide text-blue-500">
-            Unidades totales
-          </span>
-          <span className="text-lg font-bold text-gray-900">
-            {totalUnidades.toLocaleString()}
-          </span>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur rounded-2xl border border-emerald-50 shadow-md px-4 py-3 flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-wide text-emerald-500">
-            Valor aproximado
-          </span>
-          <span className="text-lg font-bold text-gray-900">
-            ${valorTotal.toFixed(2)}
-          </span>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur rounded-2xl border border-rose-50 shadow-md px-4 py-3 flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-wide text-rose-500">
-            Productos con bajo stock
-          </span>
-          <span className="text-lg font-bold text-gray-900">
-            {bajoStock}
-          </span>
-        </div>
-      </div>
-
       {/* Tabla principal */}
       <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-cardPop">
         <table className="w-full">
           <thead className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-gray-200">
             <tr>
-              {["Nombre", "Cantidad", "Stock Mínimo", "Costo por Unidad"].map(
+              {["Nombre", "Descripción", "Cantidad", "Precio", "Fecha"].map(
                 (h) => (
                   <th
                     key={h}
@@ -132,47 +89,53 @@ export const TablaProductoTerminado = ({ onAdd }) => {
           </thead>
 
           <tbody className="divide-y divide-gray-100">
-            {items.map((item, index) => (
+            {salidas.map((item, index) => (
               <tr
                 key={item.id}
                 className="group hover:bg-indigo-50/60 transition-all duration-300 animate-rowFloat"
                 style={{ animationDelay: `${index * 0.04}s` }}
               >
+                {/* Nombre */}
                 <td className="px-6 py-4 font-medium text-gray-900">
                   <span className="group-hover:text-indigo-700 transition-colors">
                     {item.nombre}
                   </span>
                 </td>
 
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
-                      item.stock_actual <= item.stock_minimo
-                        ? "bg-rose-50 text-rose-700 border-rose-200 animate-softGlow"
-                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    }`}
-                  >
-                    {item.stock_actual} {item.unidad_medida}
-                  </span>
-                </td>
-
+                {/* Descripción */}
                 <td className="px-6 py-4 text-sm text-gray-700">
-                  {item.stock_minimo} {item.unidad_medida}
+                  {item.descripcion || "—"}
                 </td>
 
+                {/* Cantidad */}
+                <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
+                  {item.cantidad} {item.unidad}
+                </td>
+
+                {/* Precio */}
                 <td className="px-6 py-4">
                   <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-50 text-slate-800 text-sm font-semibold border border-slate-200">
-                    ${Number(item.costo_unidad).toFixed(2)}
+                    ${Number(item.precioVenta).toFixed(2)}
                   </span>
+                </td>
+
+                {/* Fecha */}
+                <td className="px-6 py-4 text-sm text-gray-700">
+                  {item.creadoEn?.toDate
+                    ? item.creadoEn.toDate().toLocaleString("es-MX", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })
+                    : "—"}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        {items.length === 0 && (
+        {salidas.length === 0 && (
           <p className="text-center text-gray-500 py-10">
-            No hay productos registrados
+            No hay salidas registradas todavía.
           </p>
         )}
       </div>
