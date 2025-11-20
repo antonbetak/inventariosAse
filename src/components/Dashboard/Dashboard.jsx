@@ -9,16 +9,21 @@ import { db } from "../../utils/firebase";
 
 export const Dashboard = ({ productoTerminado = [] }) => {
   const [materiaPrima, setMateriaPrima] = useState([]);
+  const [productosTerminados, setProductosTerminados] = useState([]); // 🔹 historial de productos
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // 🔥 Leemos insumos desde Firebase (igualito que en TablaProductoTerminado)
+  // 🔥 Leemos insumos + productosTerminados desde Firebase
   useEffect(() => {
     const cargarDesdeFirebase = async () => {
       try {
-        const snap = await getDocs(collection(db, "insumos"));
+        const [snapInsumos, snapProductos] = await Promise.all([
+          getDocs(collection(db, "insumos")),
+          getDocs(collection(db, "productosTerminados")),
+        ]);
 
-        const data = snap.docs.map((doc) => {
+        // ------- Insumos --------
+        const dataInsumos = snapInsumos.docs.map((doc) => {
           const d = doc.data();
           return {
             id: doc.id,
@@ -30,7 +35,21 @@ export const Dashboard = ({ productoTerminado = [] }) => {
           };
         });
 
-        setMateriaPrima(data);
+        // ------- Productos Terminados (historial) --------
+        const dataProductos = snapProductos.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        // Ordenar por fecha (más nuevos primero)
+        dataProductos.sort(
+          (a, b) =>
+            (b.creadoEn?.toDate?.() ?? new Date()) -
+            (a.creadoEn?.toDate?.() ?? new Date())
+        );
+
+        setMateriaPrima(dataInsumos);
+        setProductosTerminados(dataProductos);
       } catch (e) {
         console.error("Error leyendo Firestore en Dashboard:", e);
         setError("No se pudieron cargar los datos de Firebase.");
@@ -53,19 +72,23 @@ export const Dashboard = ({ productoTerminado = [] }) => {
     [materiaPrima]
   );
 
+  // Usamos el historial de productosTerminados; si por algo viene el prop, lo usamos de fallback
+  const productosParaResumen =
+    productosTerminados.length > 0 ? productosTerminados : productoTerminado;
+
   const ValorTotalProductoTerminado = useMemo(
     () =>
-      productoTerminado.reduce(
+      productosParaResumen.reduce(
         (suma, p) =>
           suma +
           Number(p.stock_actual ?? p.cantidad ?? 0) *
-            Number(p.costo_unidad ?? p.costoUnitario ?? 0),
+            Number(p.costo_unidad ?? p.costoUnitario ?? p.precioVenta ?? 0),
         0
       ),
-    [productoTerminado]
+    [productosParaResumen]
   );
 
-  // ⚠️ AQUÍ ESTÁ LA MAGIA: MISMA CONDICIÓN QUE EN TU TABLA
+  // ⚠️ Misma condición que usas en otros lados: stock_actual <= stock_minimo
   const pocoStockMateriaPrima = useMemo(
     () =>
       materiaPrima.filter(
@@ -115,7 +138,6 @@ export const Dashboard = ({ productoTerminado = [] }) => {
         <Estadistica
           icon={TrendingUp}
           title="Alertas de Reorden"
-          // 👉 AQUÍ YA MARCA 1 SI LA TAPA #54 ESTÁ EN STOCK BAJO
           value={pocoStockMateriaPrima.length}
           color="#bf092f"
         />
@@ -124,7 +146,7 @@ export const Dashboard = ({ productoTerminado = [] }) => {
       {/* Alertas */}
       {pocoStockMateriaPrima.length > 0 && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
-          <h3 className="font-bold text-red-800 mb-2"> Stock Bajo</h3>
+          <h3 className="font-bold text-red-800 mb-2">Stock Bajo</h3>
           <ul className="space-y-1">
             {pocoStockMateriaPrima.map((m) => (
               <li key={m.id} className="text-red-700 text-sm">
@@ -138,6 +160,7 @@ export const Dashboard = ({ productoTerminado = [] }) => {
 
       {/* Registros */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Últimas materias primas */}
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-bold mb-4">Últimas Materias Primas</h3>
           <div className="space-y-2">
@@ -157,19 +180,22 @@ export const Dashboard = ({ productoTerminado = [] }) => {
           </div>
         </div>
 
+        {/* Últimos productos terminados (HISTORIAL) */}
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-bold mb-4">Últimos Productos</h3>
           <div className="space-y-2">
-            {productoTerminado.slice(-5).reverse().map((p) => (
+            {productosTerminados.slice(0, 5).map((p) => (
               <div key={p.id} className="flex justify-between py-2 border-b">
+                {/* Nombre del producto */}
                 <span className="font-medium">{p.nombre}</span>
+                {/* Solo precioVenta */}
                 <span className="text-gray-600">
-                  {p.stock_actual ?? p.cantidad}{" "}
-                  {p.unidad_medida ?? p.unidad}
+                  ${Number(p.precioVenta ?? 0).toFixed(2)}
                 </span>
               </div>
             ))}
-            {productoTerminado.length === 0 && (
+
+            {productosTerminados.length === 0 && (
               <p className="text-gray-500 text-center py-4">
                 No hay productos registrados
               </p>
