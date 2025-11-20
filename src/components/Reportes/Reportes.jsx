@@ -258,7 +258,7 @@ export const Reportes = () => {
           <p className="text-xs text-gray-600">
             <strong>Registros:</strong> {resumenEntradas.registros}
             <br />
-            <strong>Valor:</strong> {formatCurrency(resumenEntradas.valor)}
+            
           </p>
         </div>
 
@@ -271,7 +271,7 @@ export const Reportes = () => {
           <p className="text-xs text-gray-600">
             <strong>Registros:</strong> {resumenSalidas.registros}
             <br />
-            <strong>Valor:</strong> {formatCurrency(resumenSalidas.valor)}
+            
           </p>
         </div>
 
