@@ -1,208 +1,209 @@
-// src/components/Dashboard/Dashboard.jsx
+import { memo } from "react";
+import { DashboardCharts } from "./DashboardCharts";
+import {
+  Wallet,
+  Boxes,
+  PackageCheck,
+  TriangleAlert,
+  ArrowUpRight,
+  Plus,
+  CircleCheck,
+  ArrowDownLeft,
+  ArrowUpRight as Outgoing,
+} from "lucide-react";
 
-import React, { useEffect, useState, useMemo } from "react";
-import { Package, ShoppingCart, TrendingUp } from "lucide-react";
-import { Estadistica } from "../compComunes/Estadistica";
+import { GlassCard } from "../ui/GlassCard";
+import { StatCard } from "../ui/StatCard";
+import { PageHeader, SectionHeader } from "../ui/PageHeader";
+import { GlassButton } from "../ui/GlassButton";
+import { EmptyState } from "../ui/EmptyState";
+import { StatusBadge } from "../ui/StatusBadge";
+import {
+  money,
+  stockStatus,
+  recordDate,
+  dateLabel,
+} from "../../utils/inventoryDisplay";
 
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../utils/firebase";
-
-export const Dashboard = ({ productoTerminado = [] }) => {
-  const [materiaPrima, setMateriaPrima] = useState([]);
-  const [productosTerminados, setProductosTerminados] = useState([]); // 🔹 historial de productos
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  // 🔥 Leemos insumos + productosTerminados desde Firebase
-  useEffect(() => {
-    const cargarDesdeFirebase = async () => {
-      try {
-        const [snapInsumos, snapProductos] = await Promise.all([
-          getDocs(collection(db, "insumos")),
-          getDocs(collection(db, "productosTerminados")),
-        ]);
-
-        // ------- Insumos --------
-        const dataInsumos = snapInsumos.docs.map((doc) => {
-          const d = doc.data();
-          return {
-            id: doc.id,
-            nombre: d.nombre || "(Sin nombre)",
-            stock_actual: d.stock_actual ?? 0,
-            stock_minimo: d.stock_minimo ?? 0,
-            costo_unidad: d.costo_unidad ?? 0,
-            unidad_medida: d.unidad_medida || "",
-          };
-        });
-
-        // ------- Productos Terminados (historial) --------
-        const dataProductos = snapProductos.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        // Ordenar por fecha (más nuevos primero)
-        dataProductos.sort(
-          (a, b) =>
-            (b.creadoEn?.toDate?.() ?? new Date()) -
-            (a.creadoEn?.toDate?.() ?? new Date())
-        );
-
-        setMateriaPrima(dataInsumos);
-        setProductosTerminados(dataProductos);
-      } catch (e) {
-        console.error("Error leyendo Firestore en Dashboard:", e);
-        setError("No se pudieron cargar los datos de Firebase.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    cargarDesdeFirebase();
-  }, []);
-
-  const ValorTotalMateriaPrima = useMemo(
-    () =>
-      materiaPrima.reduce(
-        (suma, m) =>
-          suma +
-          Number(m.stock_actual ?? 0) * Number(m.costo_unidad ?? 0),
-        0
-      ),
-    [materiaPrima]
+export const Dashboard = memo(function Dashboard({
+  materiaPrima = [],
+  productoTerminado = [],
+  reports,
+  onNavigate,
+  onAdd,
+}) {
+  const products = productoTerminado;
+  const { rawValue, productValue } = reports;
+  const alerts = materiaPrima.filter(
+    (m) => Number(m.stock_actual ?? 0) <= Number(m.stock_minimo ?? 0),
   );
-
-  // Usamos el historial de productosTerminados; si por algo viene el prop, lo usamos de fallback
-  const productosParaResumen =
-    productosTerminados.length > 0 ? productosTerminados : productoTerminado;
-
-  const ValorTotalProductoTerminado = useMemo(
-    () =>
-      productosParaResumen.reduce(
-        (suma, p) =>
-          suma +
-          Number(p.stock_actual ?? p.cantidad ?? 0) *
-            Number(p.costo_unidad ?? p.costoUnitario ?? p.precioVenta ?? 0),
-        0
-      ),
-    [productosParaResumen]
-  );
-
-  // ⚠️ Misma condición que usas en otros lados: stock_actual <= stock_minimo
-  const pocoStockMateriaPrima = useMemo(
-    () =>
-      materiaPrima.filter(
-        (m) =>
-          Number(m.stock_actual ?? 0) <= Number(m.stock_minimo ?? 0)
-      ),
-    [materiaPrima]
-  );
-
-  if (loading) {
-    return (
-      <p className="p-6 text-center text-gray-500">
-        Cargando resumen del inventario…
-      </p>
-    );
-  }
-
-  if (error) {
-    return <p className="p-4 text-red-600">{error}</p>;
-  }
-
+  const critical = materiaPrima.filter(
+    (m) => stockStatus(m) === "Crítico",
+  ).length;
+  const low = materiaPrima.filter((m) => stockStatus(m) === "Bajo").length;
+  const healthy = materiaPrima.length - critical - low;
+  const activity = reports.activity.map((m) => ({
+    ...m,
+    kind: m.entidad === "materia" ? "raw" : "product",
+    date: recordDate(m.fecha),
+  }));
   return (
-    <div className="w-full space-y-8">
-      {/* Título */}
-      <div className="text-center">
-        <h2 className="text-gray-500">Resumen del inventario</h2>
+    <>
+      <PageHeader
+        eyebrow="SANATÉ / CONTROL OPERATIVO"
+        title="Tu inventario, en perspectiva."
+        description="Una visión clara de tus recursos y de lo que necesita atención."
+      >
+        <GlassButton variant="secondary" onClick={() => onNavigate("Reportes")}>
+          Ver reportes <ArrowUpRight size={16} />
+        </GlassButton>
+        <GlassButton onClick={onAdd}>
+          <Plus size={17} />
+          Registrar entrada
+        </GlassButton>
+      </PageHeader>
+      <div className="overview-strip">
+        <span>
+          <span className="status-dot" />
+          Resumen actual
+        </span>
+        <span>Inventario & producción</span>
       </div>
-
-      {/* Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Estadistica
-          icon={Package}
-          title="Materia Prima"
-          value={`$${ValorTotalMateriaPrima.toLocaleString("es-MX", {
-            minimumFractionDigits: 2,
-          })}`}
-          color="#001a5a"
+      <div className="stats-grid">
+        <StatCard
+          icon={Wallet}
+          title="Valor total inventario"
+          value={money(rawValue + productValue)}
+          detail="Insumos + productos registrados"
         />
-        <Estadistica
-          icon={ShoppingCart}
-          title="Producto Terminado"
-          value={`$${ValorTotalProductoTerminado.toLocaleString("es-MX", {
-            minimumFractionDigits: 2,
-          })}`}
-          color="#5fa199"
+        <StatCard
+          icon={Boxes}
+          title="Materia prima"
+          value={money(rawValue)}
+          detail={`${materiaPrima.length} insumos registrados`}
+          tone="teal"
         />
-        <Estadistica
-          icon={TrendingUp}
-          title="Alertas de Reorden"
-          value={pocoStockMateriaPrima.length}
-          color="#bf092f"
+        <StatCard
+          icon={PackageCheck}
+          title="Producto terminado"
+          value={money(productValue)}
+          detail={`${products.length} registros de producto`}
+          tone="violet"
+        />
+        <StatCard
+          icon={TriangleAlert}
+          title="Stock crítico"
+          value={critical}
+          detail={`${low} insumos adicionales en nivel bajo`}
+          tone="amber"
         />
       </div>
-
-      {/* Alertas */}
-      {pocoStockMateriaPrima.length > 0 && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
-          <h3 className="font-bold text-red-800 mb-2">Stock Bajo</h3>
-          <ul className="space-y-1">
-            {pocoStockMateriaPrima.map((m) => (
-              <li key={m.id} className="text-red-700 text-sm">
-                {m.nombre}: {m.stock_actual} {m.unidad_medida} (Mín:{" "}
-                {m.stock_minimo})
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Registros */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Últimas materias primas */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-bold mb-4">Últimas Materias Primas</h3>
-          <div className="space-y-2">
-            {materiaPrima.slice(-5).reverse().map((m) => (
-              <div key={m.id} className="flex justify-between py-2 border-b">
-                <span className="font-medium">{m.nombre}</span>
-                <span className="text-gray-600">
-                  {m.stock_actual} {m.unidad_medida}
+      <DashboardCharts
+        history={reports.history}
+        healthy={healthy}
+        low={low}
+        critical={critical}
+        count={materiaPrima.length}
+      />
+      <div className="dashboard-bottom">
+        <GlassCard>
+          <SectionHeader
+            title="Requieren atención"
+            description={`${alerts.length} insumos en su mínimo o por debajo`}
+          >
+            <span className="icon-capsule amber">
+              <TriangleAlert size={19} />
+            </span>
+          </SectionHeader>
+          {alerts.length ? (
+            <div className="attention-list">
+              {alerts.map((m) => (
+                <div className="attention-item" key={m.id}>
+                  <span className="item-icon">
+                    <Boxes size={18} />
+                  </span>
+                  <div className="item-copy">
+                    <strong>{m.nombre || "Sin nombre"}</strong>
+                    <small>
+                      {m.stock_actual ?? 0} {m.unidad_medida} disponibles ·
+                      mínimo {m.stock_minimo ?? 0}
+                    </small>
+                    <div className="stock-track">
+                      <span
+                        style={{
+                          width: `${Math.min(100, Math.max(0, (Number(m.stock_actual) / Math.max(1, Number(m.stock_minimo))) * 100))}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <StatusBadge status={stockStatus(m)} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title={
+                materiaPrima.length
+                  ? "Todo en equilibrio"
+                  : "Sin alertas disponibles"
+              }
+              description={
+                materiaPrima.length
+                  ? "Tus insumos están por encima del stock mínimo."
+                  : "Las alertas aparecerán cuando registres insumos."
+              }
+            />
+          )}
+          <button
+            type="button"
+            className="panel-link"
+            onClick={() => onNavigate("Materia Prima")}
+          >
+            Gestionar materia prima <ArrowUpRight size={16} />
+          </button>
+        </GlassCard>
+        <GlassCard>
+          <SectionHeader
+            title="Registros recientes"
+            description="Entradas, salidas y cambios del inventario"
+          />
+          <div className="activity-feed">
+            {activity.map((item, index) => (
+              <div key={`${item.kind}-${item.id}`} className="activity-item">
+                <span
+                  className={`activity-icon ${item.kind === "raw" ? "teal" : "blue"}`}
+                >
+                  {item.kind === "raw" ? (
+                    <ArrowDownLeft size={18} />
+                  ) : (
+                    <Outgoing size={18} />
+                  )}
+                </span>
+                <div>
+                  <small>{item.descripcion?.replace(/ · demo$/i, "")}</small>
+                  <strong>{item.nombre || "Sin nombre"}</strong>
+                  <span>
+                    {item.date ? dateLabel(item.date) : "Sin fecha registrada"}
+                  </span>
+                </div>
+                <span className="activity-index">
+                  {String(index + 1).padStart(2, "0")}
                 </span>
               </div>
             ))}
-            {materiaPrima.length === 0 && (
-              <p className="text-gray-500 text-center py-4">
-                No hay materias primas registradas
-              </p>
-            )}
           </div>
-        </div>
-
-        {/* Últimos productos terminados (HISTORIAL) */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-bold mb-4">Últimos Productos</h3>
-          <div className="space-y-2">
-            {productosTerminados.slice(0, 5).map((p) => (
-              <div key={p.id} className="flex justify-between py-2 border-b">
-                {/* Nombre del producto */}
-                <span className="font-medium">{p.nombre}</span>
-                {/* Solo precioVenta */}
-                <span className="text-gray-600">
-                  ${Number(p.precioVenta ?? 0).toFixed(2)}
-                </span>
-              </div>
-            ))}
-
-            {productosTerminados.length === 0 && (
-              <p className="text-gray-500 text-center py-4">
-                No hay productos registrados
-              </p>
-            )}
+          {!activity.length && (
+            <EmptyState
+              title="Tu actividad aparecerá aquí"
+              description="Consulta tus últimos registros en este espacio."
+            />
+          )}
+          <div className="feed-note">
+            <CircleCheck size={14} />
+            Últimos movimientos registrados
           </div>
-        </div>
+        </GlassCard>
       </div>
-    </div>
+    </>
   );
-};
+});

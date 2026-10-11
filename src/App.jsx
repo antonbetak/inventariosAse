@@ -1,256 +1,244 @@
-// src/App.jsx
-import React, { useState, useEffect } from 'react';
-import { Local } from './hooks/Local';
-import { generarId } from './utils/generarId';
-
-// Firebase Auth
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from './utils/firebase';
-
-// Auth
-import { Login } from './components/auth/Login';
-
-// Componentes comunes
-import { Header } from './components/compComunes/Header';
-import { Navegacion } from './components/compComunes/Navegacion';
-import { PopUp } from './components/compComunes/PopUp';
-
-// Módulos
-import { Dashboard } from './components/Dashboard/Dashboard';
-import { TablaMateriaPrima } from './components/materiaPrima/TablaMateriaPrima';
-import { MateriaPrima } from './components/materiaPrima/MateriaPrima';
-import { TablaProductoTerminado } from './components/productoTerminado/TablaProductoTerminado';
-import { ProductoTerminado } from './components/productoTerminado/productoTerminado';
-import { Reportes } from './components/Reportes/Reportes';
-
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { authService } from "./services/authService";
+import { inventoryService } from "./services/inventoryService";
+import { STORAGE_KEYS } from "./services/storage";
+import { useInventory } from "./hooks/useInventory";
+import { Login } from "./components/auth/Login";
+import { AppShell } from "./components/layout/AppShell";
+import { GlassButton } from "./components/ui/GlassButton";
+import { LoadingState, ErrorState } from "./components/ui/EmptyState";
+import { PopUp } from "./components/compComunes/PopUp";
+const loadDashboard = () => import("./components/Dashboard/Dashboard");
+const Dashboard = lazy(() =>
+  loadDashboard().then((module) => ({ default: module.Dashboard })),
+);
+import { TablaMateriaPrima } from "./components/materiaPrima/TablaMateriaPrima";
+import { MateriaPrima } from "./components/materiaPrima/MateriaPrima";
+import { TablaProductoTerminado } from "./components/productoTerminado/TablaProductoTerminado";
+import { ProductoTerminado } from "./components/productoTerminado/productoTerminado";
+const loadReports = () => import("./components/Reportes/Reportes");
+const Reportes = lazy(() =>
+  loadReports().then((module) => ({ default: module.Reportes })),
+);
+const tabs = ["Dashboard", "Materia Prima", "Producto Terminado", "Reportes"];
 function App() {
-  // Estado de autenticación
-  const [user, setUser] = useState(null);
-  const [checkingAuth, setCheckingAuth] = useState(true); // para saber si ya checamos Firebase
-
-  // Pestaña activa: la cargamos de localStorage para “recordar” dónde estabas
-  const [activeTab, setActiveTab] = useState(
-    () => localStorage.getItem('activeTab') || 'Dashboard'
-  );
-
-  // Estados principales
-  const [materiaPrima, setMateriaPrima] = Local('rawMaterials', []);
-  const [productoTerminado, setProductoTerminado] = Local('products', []);
-
-  // Popup
-  const [isPopUpOpen, setIsPopUpOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [popUpType, setPopUpType] = useState('');
-
-  // ============================
-  // 🔐 Escuchar la sesión de Firebase
-  // ============================
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        // Si hay usuario en Firebase, lo guardamos en el estado
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          nombre: 'Administrador',
-        });
-      } else {
-        setUser(null);
-      }
-      setCheckingAuth(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // ============================
-  // 💾 Guardar la pestaña activa en localStorage
-  // ============================
-  useEffect(() => {
-    localStorage.setItem('activeTab', activeTab);
-  }, [activeTab]);
-
-  // ============================
-  // 🔓 Logout (cerrar sesión)
-  // ============================
-  const handleLogout = async () => {
+  const [user, setUser] = useState(null),
+    [checking, setChecking] = useState(true);
+  const [activeTab, setActiveTab] = useState(() => {
     try {
-      await signOut(auth);
+      const tab = localStorage.getItem(STORAGE_KEYS.navigation);
+      return tabs.includes(tab) ? tab : "Dashboard";
+    } catch {
+      return "Dashboard";
+    }
+  });
+  const [modal, setModal] = useState(null),
+    [deleteRequest, setDeleteRequest] = useState(null),
+    [notice, setNotice] = useState(""),
+    [deleting, setDeleting] = useState(false),
+    [deleteError, setDeleteError] = useState("");
+  const { data, reports, loading, error, refresh } = useInventory(!!user);
+  useEffect(() => {
+    let active = true;
+    authService
+      .getSession()
+      .then((session) => {
+        if (active) setUser(session);
+      })
+      .finally(() => {
+        if (active) setChecking(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.navigation, activeTab);
+    } catch {
+      /* Navigation remains usable without persistence. */
+    }
+  }, [activeTab]);
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(""), 4500);
+    return () => clearTimeout(timer);
+  }, [notice]);
+  useEffect(() => {
+    if (!user) return;
+    const warm = () => {
+      void loadDashboard().catch(() => {});
+      void loadReports().catch(() => {});
+    };
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(warm, { timeout: 2500 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(warm, 1500);
+    return () => window.clearTimeout(id);
+  }, [user]);
+  const openEntry = useCallback(() => setModal({ type: "entry" }), []);
+  const closeModal = useCallback(() => setModal(null), []);
+  const saved = () => {
+    setModal(null);
+    setNotice("Registro guardado. Inventario actualizado.");
+  };
+  const logout = async () => {
+    try {
+      await authService.logout();
+      setUser(null);
+      setModal(null);
+      setDeleteRequest(null);
+      setActiveTab("Dashboard");
     } catch (e) {
-      console.error('Error al cerrar sesión:', e);
-    }
-    setUser(null);
-    setActiveTab('Dashboard');
-  };
-
-  // ============================
-  // Materia prima (estado local)
-  // ============================
-  const anadirMateriaPrima = (materia) => {
-    const nuevaMateria = {
-      ...materia,
-      id: generarId(),
-      createdAt: new Date().toISOString(),
-    };
-    setMateriaPrima([...materiaPrima, nuevaMateria]);
-    setIsPopUpOpen(false);
-  };
-
-  const actualizarMateriaPrima = (materia) => {
-    setMateriaPrima(
-      materiaPrima.map((m) => (m.id === materia.id ? materia : m))
-    );
-    setIsPopUpOpen(false);
-    setEditingProduct(null);
-  };
-
-  const eliminarMateriaPrima = (id) => {
-    if (window.confirm('¿Estás seguro de eliminar esta materia prima?')) {
-      setMateriaPrima(materiaPrima.filter((m) => m.id !== id));
+      setNotice(e.message);
     }
   };
-
-  const handleNuevaMateriaPrima = () => {
-    setPopUpType('MateriaPrima');
-    setEditingProduct(null);
-    setIsPopUpOpen(true);
+  const requestDelete = (type, item) => {
+    setDeleteError("");
+    setDeleteRequest({ type, item });
   };
-
-  const handleEditarMateriaPrima = (materia) => {
-    setEditingProduct(materia);
-    setPopUpType('MateriaPrima');
-    setIsPopUpOpen(true);
-  };
-
-  // ============================
-  // Producto terminado (estado local)
-  // ============================
-  const anadirProductoTerminado = (producto) => {
-    const nuevoProducto = {
-      ...producto,
-      id: generarId(),
-      createdAt: new Date().toISOString(),
-    };
-    setProductoTerminado([...productoTerminado, nuevoProducto]);
-    setIsPopUpOpen(false);
-  };
-
-  const actualizarProductoTerminado = (producto) => {
-    setProductoTerminado(
-      productoTerminado.map((p) => (p.id === producto.id ? producto : p))
-    );
-    setIsPopUpOpen(false);
-    setEditingProduct(null);
-  };
-
-  const eliminarProductoTerminado = (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este producto?')) {
-      setProductoTerminado(productoTerminado.filter((p) => p.id !== id));
+  const remove = async () => {
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      if (deleteRequest.type === "raw")
+        await inventoryService.deleteRawMaterial(deleteRequest.item.id);
+      else await inventoryService.deleteFinishedProduct(deleteRequest.item.id);
+      setDeleteRequest(null);
+      setNotice("Registro eliminado del inventario.");
+    } catch (e) {
+      setDeleteError(e.message);
+    } finally {
+      setDeleting(false);
     }
   };
-
-  const handleNuevoProductoTerminado = () => {
-    setPopUpType('ProductoTerminado');
-    setEditingProduct(null);
-    setIsPopUpOpen(true);
-  };
-
-  const handleEditarProductoTerminado = (producto) => {
-    setEditingProduct(producto);
-    setPopUpType('ProductoTerminado');
-    setIsPopUpOpen(true);
-  };
-
-  const handleCerrarPopUp = () => {
-    setIsPopUpOpen(false);
-    setEditingProduct(null);
-  };
-
-  // ============================
-  // Render
-  // ============================
-
-  // Mientras revisamos con Firebase si hay sesión activa
-  if (checkingAuth) {
+  if (checking)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-600">Cargando...</p>
+      <div className="auth-loading">
+        <LoadingState label="Preparando tu espacio de trabajo…" />
       </div>
     );
-  }
-
-  // Si no hay usuario logueado, mostramos login
-  if (!user) {
-    return <Login onLogin={setUser} />;
-  }
-
-  // Si hay usuario, mostramos la app
+  if (!user) return <Login onLogin={setUser} />;
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <Header user={user} onLogout={handleLogout} />
-
-      <Navegacion activeTab={activeTab} onTabChange={setActiveTab} />
-
-      <main className="w-full py-8">
-        {activeTab === 'Dashboard' && (
-          <Dashboard
-            materiaPrima={materiaPrima}
-            productoTerminado={productoTerminado}
-          />
-        )}
-
-        {activeTab === 'Materia Prima' && (
-          <TablaMateriaPrima
-            onAdd={handleNuevaMateriaPrima}
-            onEdit={handleEditarMateriaPrima}
-            onDelete={eliminarMateriaPrima}
-          />
-        )}
-
-        {activeTab === 'Producto Terminado' && (
-          <TablaProductoTerminado
-            onAdd={handleNuevoProductoTerminado}
-            onEdit={handleEditarProductoTerminado}
-            onDelete={eliminarProductoTerminado}
-          />
-        )}
-
-        {activeTab === 'Reportes' && <Reportes />}
-      </main>
-
+    <AppShell
+      user={user}
+      onLogout={logout}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    >
+      <Suspense fallback={<LoadingState />}>
+        <div className="page-view" key={activeTab}>
+          {loading ? (
+            <LoadingState />
+          ) : error ? (
+            <>
+              <ErrorState message={error} />
+              <GlassButton onClick={refresh} variant="secondary">
+                Reintentar
+              </GlassButton>
+            </>
+          ) : (
+            <>
+              {activeTab === "Dashboard" && (
+                <Dashboard
+                  materiaPrima={data.rawMaterials}
+                  productoTerminado={data.finishedProducts}
+                  reports={reports}
+                  onNavigate={setActiveTab}
+                  onAdd={openEntry}
+                />
+              )}
+              {activeTab === "Materia Prima" && (
+                <TablaMateriaPrima
+                  materia={data.rawMaterials}
+                  onAdd={() => setModal({ type: "raw" })}
+                  onEntry={() => setModal({ type: "entry" })}
+                  onEdit={(item) => setModal({ type: "raw", item })}
+                  onDelete={(item) => requestDelete("raw", item)}
+                />
+              )}
+              {activeTab === "Producto Terminado" && (
+                <TablaProductoTerminado
+                  salidas={data.finishedProducts}
+                  onAdd={() => setModal({ type: "product" })}
+                  onEdit={(item) => setModal({ type: "product", item })}
+                  onDelete={(item) => requestDelete("product", item)}
+                />
+              )}
+              {activeTab === "Reportes" && (
+                <Reportes reports={reports} snapshot={data} />
+              )}
+            </>
+          )}
+        </div>
+      </Suspense>
       <PopUp
-        isOpen={isPopUpOpen}
-        onClose={handleCerrarPopUp}
+        isOpen={!!modal}
+        onClose={closeModal}
         title={
-          popUpType === 'MateriaPrima'
-            ? editingProduct
-              ? 'Editar Materia Prima'
-              : 'Nueva Entrada de Materia Prima'
-            : editingProduct
-            ? 'Editar Producto'
-            : 'Registrar salida de producto terminado'
+          modal?.type === "entry"
+            ? "Registrar entrada de materia prima"
+            : modal?.type === "raw"
+              ? modal.item
+                ? "Editar materia prima"
+                : "Nueva materia prima"
+              : modal?.item
+                ? "Editar producto"
+                : "Registrar producto"
         }
       >
-        {popUpType === 'MateriaPrima' ? (
-          <MateriaPrima
-            materia={editingProduct}
-            onSave={editingProduct ? actualizarMateriaPrima : anadirMateriaPrima}
-            onCancel={handleCerrarPopUp}
-          />
-        ) : (
-          <ProductoTerminado
-            producto={editingProduct}
-            onSave={
-              editingProduct
-                ? actualizarProductoTerminado
-                : anadirProductoTerminado
-            }
-            onCancel={handleCerrarPopUp}
-          />
-        )}
+        {modal &&
+          (modal.type === "product" ? (
+            <ProductoTerminado
+              producto={modal.item}
+              rawMaterials={data?.rawMaterials ?? []}
+              onSaved={saved}
+              onCancel={closeModal}
+            />
+          ) : (
+            <MateriaPrima
+              materia={modal.item}
+              mode={modal.type === "entry" ? "entry" : "record"}
+              rawMaterials={data?.rawMaterials ?? []}
+              onSaved={saved}
+              onCancel={closeModal}
+            />
+          ))}
       </PopUp>
-    </div>
+      <PopUp
+        isOpen={!!deleteRequest}
+        onClose={() => {
+          if (!deleting) setDeleteRequest(null);
+        }}
+        title="¿Eliminar este registro?"
+      >
+        <p className="muted">
+          Se eliminará <strong>{deleteRequest?.item.nombre}</strong> del
+          inventario. El historial de movimientos se conserva. Esta acción no se
+          puede deshacer.
+        </p>
+        {deleteError && <ErrorState message={deleteError} />}
+        <div className="confirm-actions">
+          <GlassButton
+            disabled={deleting}
+            variant="secondary"
+            onClick={() => setDeleteRequest(null)}
+          >
+            Cancelar
+          </GlassButton>
+          <GlassButton disabled={deleting} variant="danger" onClick={remove}>
+            {deleting ? "Eliminando…" : "Eliminar registro"}
+          </GlassButton>
+        </div>
+      </PopUp>
+      {notice && (
+        <div className="save-notice glass" role="status">
+          <span className="status-dot" />
+          {notice}
+        </div>
+      )}
+    </AppShell>
   );
 }
-
 export default App;

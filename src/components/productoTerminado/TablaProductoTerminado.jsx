@@ -1,144 +1,156 @@
-import React, { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../utils/firebase";
+import React, { useState } from "react";
+import { Plus, PackageCheck, Wallet, Pencil, Trash2 } from "lucide-react";
 
-export const TablaProductoTerminado = ({ onAdd }) => {
-  const [salidas, setSalidas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+import { PageHeader } from "../ui/PageHeader";
+import { GlassCard } from "../ui/GlassCard";
+import { GlassButton, IconButton } from "../ui/GlassButton";
+import { StatCard } from "../ui/StatCard";
+import { SearchInput } from "../ui/SearchInput";
+import { FilterTabs } from "../ui/FilterTabs";
+import { StatusBadge } from "../ui/StatusBadge";
+import { DataTable } from "../ui/DataTable";
+import { EmptyState } from "../ui/EmptyState";
+import { money, dateLabel, stockStatus } from "../../utils/inventoryDisplay";
 
-  // ================================
-  // Cargar historial desde Firebase
-  // ================================
-  useEffect(() => {
-    const cargarSalidas = async () => {
-      try {
-        const snap = await getDocs(collection(db, "productosTerminados"));
-        const data = snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        // Ordenar por fecha (más nuevos primero)
-        data.sort(
-          (a, b) =>
-            (b.creadoEn?.toDate?.() ?? new Date()) -
-            (a.creadoEn?.toDate?.() ?? new Date())
-        );
-
-        setSalidas(data);
-      } catch (e) {
-        console.error("Error leyendo Firestore:", e);
-        setError("No se pudieron cargar los datos de Firebase.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    cargarSalidas();
-  }, []);
-
-  if (loading)
-    return (
-      <p className="p-6 text-center text-gray-500 animate-softFadeUp">
-        Cargando historial…
-      </p>
+export const TablaProductoTerminado = ({
+  salidas = [],
+  onAdd,
+  onEdit,
+  onDelete,
+}) => {
+  const [filter, setFilter] = useState("Todos");
+  const [search, setSearch] = useState("");
+  const filtered = [...salidas]
+    .sort((a, b) => b.creadoEn.localeCompare(a.creadoEn))
+    .filter(
+      (p) =>
+        `${p.nombre ?? ""} ${p.descripcion ?? ""}`
+          .toLocaleLowerCase()
+          .includes(search.toLocaleLowerCase()) &&
+        (filter === "Todos" ||
+          stockStatus({ ...p, stock_actual: p.cantidad }) === filter),
     );
-
-  if (error) return <p className="p-4 text-red-600">{error}</p>;
-
   return (
-    <div className="space-y-6">
-      {/* Header + botón */}
-      <div className="flex justify-between items-center animate-softFadeUp">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-            Historial de Salidas
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Registros de producción y venta generados recientemente.
-          </p>
-        </div>
-
-        <button
-          onClick={onAdd}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 text-white px-5 py-2.5 rounded-2xl shadow-lg hover:shadow-xl hover:brightness-110 active:scale-95 transition-all duration-200"
-        >
+    <>
+      <PageHeader
+        title="Producto terminado"
+        description="Consulta y administra las salidas y productos registrados."
+      >
+        <GlassButton onClick={onAdd}>
           <Plus size={18} />
-          Agregar
-        </button>
+          Registrar producto
+        </GlassButton>
+      </PageHeader>
+      <div className="stats-grid two">
+        <StatCard
+          icon={PackageCheck}
+          title="Salidas registradas"
+          value={salidas.length}
+          detail="Historial de producción"
+          tone="teal"
+        />
+        <StatCard
+          icon={Wallet}
+          title="Valor de productos registrados"
+          value={money(
+            salidas.reduce(
+              (sum, p) =>
+                sum + Number(p.cantidad ?? 0) * Number(p.precioVenta ?? 0),
+              0,
+            ),
+          )}
+          detail="Cantidad × precio de venta"
+        />
       </div>
-
-      {/* Tabla principal */}
-      <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-cardPop">
-        <table className="w-full">
-          <thead className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-gray-200">
-            <tr>
-              {["Nombre", "Descripción", "Cantidad", "Precio", "Fecha"].map(
-                (h) => (
-                  <th
-                    key={h}
-                    className="px-6 py-3 text-left text-xs font-semibold text-gray-600 tracking-[0.08em] uppercase"
+      <GlassCard className="table-panel">
+        <div className="table-toolbar">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Buscar producto o descripción…"
+          />
+          <FilterTabs
+            value={filter}
+            onChange={setFilter}
+            options={["Todos", "Disponible", "Bajo", "Crítico"]}
+          />
+        </div>
+        <DataTable
+          label="Historial de producto terminado"
+          headers={[
+            "Producto",
+            "Descripción",
+            "Cantidad",
+            "Precio de venta",
+            "Fecha de registro",
+            "Estado",
+            "Acciones",
+          ]}
+        >
+          {filtered.map((item) => (
+            <tr key={item.id}>
+              <td>
+                <div className="table-name">
+                  <span className="item-icon blue">
+                    <PackageCheck size={17} />
+                  </span>
+                  <strong>{item.nombre || "Sin nombre"}</strong>
+                </div>
+              </td>
+              <td className="description-cell muted">
+                {item.descripcion?.replace(/^Lote demo SAN-/i, "Lote SAN-") ||
+                  "—"}
+              </td>
+              <td className="numeric">
+                {item.cantidad} <span className="muted">{item.unidad}</span>
+              </td>
+              <td className="numeric">{money(item.precioVenta)}</td>
+              <td className="muted">{dateLabel(item.creadoEn)}</td>
+              <td>
+                <StatusBadge
+                  status={stockStatus({ ...item, stock_actual: item.cantidad })}
+                />
+              </td>
+              <td>
+                <div className="row-actions">
+                  <IconButton
+                    label={`Editar ${item.nombre}`}
+                    onClick={() => onEdit(item)}
                   >
-                    {h}
-                  </th>
-                )
-              )}
+                    <Pencil size={16} />
+                  </IconButton>
+                  <IconButton
+                    label={`Eliminar ${item.nombre}`}
+                    onClick={() => onDelete(item)}
+                  >
+                    <Trash2 size={16} />
+                  </IconButton>
+                </div>
+              </td>
             </tr>
-          </thead>
-
-          <tbody className="divide-y divide-gray-100">
-            {salidas.map((item, index) => (
-              <tr
-                key={item.id}
-                className="group hover:bg-indigo-50/60 transition-all duration-300 animate-rowFloat"
-                style={{ animationDelay: `${index * 0.04}s` }}
-              >
-                {/* Nombre */}
-                <td className="px-6 py-4 font-medium text-gray-900">
-                  <span className="group-hover:text-indigo-700 transition-colors">
-                    {item.nombre}
-                  </span>
-                </td>
-
-                {/* Descripción */}
-                <td className="px-6 py-4 text-sm text-gray-700">
-                  {item.descripcion || "—"}
-                </td>
-
-                {/* Cantidad */}
-                <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
-                  {item.cantidad} {item.unidad}
-                </td>
-
-                {/* Precio */}
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-50 text-slate-800 text-sm font-semibold border border-slate-200">
-                    ${Number(item.precioVenta).toFixed(2)}
-                  </span>
-                </td>
-
-                {/* Fecha */}
-                <td className="px-6 py-4 text-sm text-gray-700">
-                  {item.creadoEn?.toDate
-                    ? item.creadoEn.toDate().toLocaleString("es-MX", {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      })
-                    : "—"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {salidas.length === 0 && (
-          <p className="text-center text-gray-500 py-10">
-            No hay salidas registradas todavía.
-          </p>
+          ))}
+        </DataTable>
+        {!filtered.length && (
+          <EmptyState
+            title={
+              salidas.length
+                ? "Sin coincidencias"
+                : "Aún no hay productos registrados"
+            }
+            description={
+              salidas.length
+                ? "Prueba con otra búsqueda."
+                : "Registra tu primera salida para comenzar el historial."
+            }
+          />
         )}
-      </div>
-    </div>
+        <div className="table-footer">
+          <span>
+            {filtered.length} de {salidas.length} registros
+          </span>
+          <span>Control de producto terminado</span>
+        </div>
+      </GlassCard>
+    </>
   );
 };

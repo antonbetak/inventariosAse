@@ -22,3 +22,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local configuration, credentials and generated QA artifacts
+.env
+.env.*
+!.env.example
+screenshots/
+recordings/
+test-results/
+playwright-report/
+coverage/
+.cache/
+.vite/
+tmp/
+temp/
+*.tmp
+*.pem
+*.key

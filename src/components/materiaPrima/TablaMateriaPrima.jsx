@@ -1,181 +1,168 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { Plus } from "lucide-react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../utils/firebase";
+import React, { useState, useMemo } from "react";
+import {
+  Plus,
+  Boxes,
+  Wallet,
+  TriangleAlert,
+  Pencil,
+  Trash2,
+  ArrowDownLeft,
+} from "lucide-react";
 
-export const TablaMateriaPrima = ({ onAdd }) => {
-  const [materia, setMateria] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+import { PageHeader } from "../ui/PageHeader";
+import { GlassCard } from "../ui/GlassCard";
+import { StatCard } from "../ui/StatCard";
+import { GlassButton, IconButton } from "../ui/GlassButton";
+import { SearchInput } from "../ui/SearchInput";
+import { FilterTabs } from "../ui/FilterTabs";
+import { DataTable } from "../ui/DataTable";
+import { StatusBadge } from "../ui/StatusBadge";
+import { EmptyState } from "../ui/EmptyState";
+import { money, stockStatus } from "../../utils/inventoryDisplay";
 
-  useEffect(() => {
-    const cargarDesdeFirebase = async () => {
-      try {
-        const snap = await getDocs(collection(db, "insumos"));
-
-        const data = snap.docs.map((doc) => {
-          const d = doc.data();
-          return {
-            id: doc.id,
-            nombre: d.nombre || "(Sin nombre)",
-            stock_actual: d.stock_actual ?? 0,
-            stock_minimo: d.stock_minimo ?? 0,
-            costo_unidad: d.costo_unidad ?? 0,
-            unidad_medida: d.unidad_medida || "",
-          };
-        });
-
-        setMateria(data);
-      } catch (e) {
-        console.error("Error leyendo Firestore:", e);
-        setError("No se pudieron cargar los datos de Firebase.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    cargarDesdeFirebase();
-  }, []);
-
+export const TablaMateriaPrima = ({
+  materia = [],
+  onAdd,
+  onEntry,
+  onEdit,
+  onDelete,
+}) => {
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("Todos");
   const { totalUnidades, valorTotal, bajoStock } = useMemo(() => {
     return materia.reduce(
       (acc, i) => {
         acc.totalUnidades += Number(i.stock_actual || 0);
-        acc.valorTotal += Number(i.stock_actual || 0) * Number(i.costo_unidad || 0);
+        acc.valorTotal +=
+          Number(i.stock_actual || 0) * Number(i.costo_unidad || 0);
         if (i.stock_actual <= i.stock_minimo) acc.bajoStock += 1;
         return acc;
       },
-      { totalUnidades: 0, valorTotal: 0, bajoStock: 0 }
+      { totalUnidades: 0, valorTotal: 0, bajoStock: 0 },
     );
   }, [materia]);
 
-  if (loading) {
-    return (
-      <p className="p-6 text-center text-gray-500 animate-softFadeUp">
-        Cargando materias primas…
-      </p>
-    );
-  }
-
-  if (error) {
-    return <p className="p-4 text-red-600">{error}</p>;
-  }
-
+  const filtered = materia.filter(
+    (m) =>
+      m.nombre.toLocaleLowerCase().includes(search.toLocaleLowerCase()) &&
+      (filter === "Todos" || stockStatus(m) === filter),
+  );
   return (
-    <div className="space-y-6">
-      {/* Header + botón */}
-      <div className="flex justify-between items-center animate-softFadeUp">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-            Materia Prima
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Control de tus insumos base y su disponibilidad actual.
-          </p>
-        </div>
-
-        <button
-          onClick={onAdd}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 text-white px-5 py-2.5 rounded-2xl shadow-lg hover:shadow-xl hover:brightness-110 active:scale-95 transition-all duration-200"
-        >
+    <>
+      <PageHeader
+        title="Materia prima"
+        description="Gestiona tus insumos, existencias y niveles mínimos."
+      >
+        <GlassButton variant="secondary" onClick={onEntry}>
+          <ArrowDownLeft size={17} />
+          Registrar entrada
+        </GlassButton>
+        <GlassButton onClick={onAdd}>
           <Plus size={18} />
-          Agregar
-        </button>
+          Nueva materia prima
+        </GlassButton>
+      </PageHeader>
+      <div className="stats-grid three">
+        <StatCard
+          icon={Boxes}
+          title="Insumos registrados"
+          value={materia.length}
+          detail={`${totalUnidades.toLocaleString("es-MX")} unidades agregadas · diferentes medidas`}
+          tone="teal"
+        />
+        <StatCard
+          icon={Wallet}
+          title="Valor del inventario"
+          value={money(valorTotal)}
+        />
+        <StatCard
+          icon={TriangleAlert}
+          title="Requieren reorden"
+          value={bajoStock}
+          detail="Stock en el mínimo o por debajo"
+          tone="amber"
+        />
       </div>
-
-      {/* Tarjetas resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-softFadeUp">
-        <div className="bg-white/80 backdrop-blur rounded-2xl border border-blue-50 shadow-md px-4 py-3 flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-wide text-blue-500">
-            Unidades totales
-          </span>
-          <span className="text-lg font-bold text-gray-900">
-            {totalUnidades.toLocaleString()}
-          </span>
+      <GlassCard className="table-panel">
+        <div className="table-toolbar">
+          <SearchInput value={search} onChange={setSearch} />
+          <FilterTabs
+            options={["Todos", "Disponible", "Bajo", "Crítico"]}
+            value={filter}
+            onChange={setFilter}
+          />
         </div>
-
-        <div className="bg-white/80 backdrop-blur rounded-2xl border border-emerald-50 shadow-md px-4 py-3 flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-wide text-emerald-500">
-            Valor aproximado
-          </span>
-          <span className="text-lg font-bold text-gray-900">
-            ${valorTotal.toFixed(2)}
-          </span>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur rounded-2xl border border-rose-50 shadow-md px-4 py-3 flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-wide text-rose-500">
-            Insumos con bajo stock
-          </span>
-          <span className="text-lg font-bold text-gray-900">
-            {bajoStock}
-          </span>
-        </div>
-      </div>
-
-      {/* Tabla principal */}
-      <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-cardPop">
-        <table className="w-full">
-          <thead className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-gray-200">
-            <tr>
-              {["Nombre", "Cantidad", "Stock Mínimo", "Costo por Unidad"].map(
-                (h) => (
-                  <th
-                    key={h}
-                    className="px-6 py-3 text-left text-xs font-semibold text-gray-600 tracking-[0.08em] uppercase"
+        <DataTable
+          label="Inventario de materia prima"
+          headers={[
+            "Insumo",
+            "Stock actual",
+            "Unidad",
+            "Stock mínimo",
+            "Costo / unidad",
+            "Estado",
+            "Acciones",
+          ]}
+        >
+          {filtered.map((m) => (
+            <tr key={m.id}>
+              <td>
+                <div className="table-name">
+                  <span className="item-icon teal">
+                    <Boxes size={17} />
+                  </span>
+                  <strong>{m.nombre}</strong>
+                </div>
+              </td>
+              <td className="numeric">
+                {Number(m.stock_actual).toLocaleString("es-MX")}
+              </td>
+              <td className="muted">{m.unidad_medida || "—"}</td>
+              <td>{m.stock_minimo}</td>
+              <td className="numeric">{money(m.costo_unidad)}</td>
+              <td>
+                <StatusBadge status={stockStatus(m)} />
+              </td>
+              <td>
+                <div className="row-actions">
+                  <IconButton
+                    label={`Editar ${m.nombre}`}
+                    onClick={() => onEdit(m)}
                   >
-                    {h}
-                  </th>
-                )
-              )}
+                    <Pencil size={16} />
+                  </IconButton>
+                  <IconButton
+                    label={`Eliminar ${m.nombre}`}
+                    onClick={() => onDelete(m)}
+                  >
+                    <Trash2 size={16} />
+                  </IconButton>
+                </div>
+              </td>
             </tr>
-          </thead>
-
-          <tbody className="divide-y divide-gray-100">
-            {materia.map((m, index) => (
-              <tr
-                key={m.id}
-                className="group hover:bg-indigo-50/60 transition-all duration-300 animate-rowFloat"
-                style={{ animationDelay: `${index * 0.04}s` }}
-              >
-                <td className="px-6 py-4 font-medium text-gray-900">
-                  <span className="group-hover:text-indigo-700 transition-colors">
-                    {m.nombre}
-                  </span>
-                </td>
-
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
-                      m.stock_actual <= m.stock_minimo
-                        ? "bg-rose-50 text-rose-700 border-rose-200 animate-softGlow"
-                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    }`}
-                  >
-                    {m.stock_actual} {m.unidad_medida}
-                  </span>
-                </td>
-
-                <td className="px-6 py-4 text-sm text-gray-700">
-                  {m.stock_minimo} {m.unidad_medida}
-                </td>
-
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-50 text-slate-800 text-sm font-semibold border border-slate-200">
-                    ${Number(m.costo_unidad).toFixed(2)}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {materia.length === 0 && (
-          <p className="text-center text-gray-500 py-10">
-            No hay materia prima registrada
-          </p>
+          ))}
+        </DataTable>
+        {!filtered.length && (
+          <EmptyState
+            title={
+              materia.length
+                ? "Sin coincidencias"
+                : "Tu inventario empieza aquí"
+            }
+            description={
+              materia.length
+                ? "Prueba con otro nombre o estado."
+                : "Los insumos registrados aparecerán en esta tabla."
+            }
+          />
         )}
-      </div>
-    </div>
+        <div className="table-footer">
+          <span>
+            {filtered.length} de {materia.length} insumos
+          </span>
+          <span>Inventario actual</span>
+        </div>
+      </GlassCard>
+    </>
   );
 };

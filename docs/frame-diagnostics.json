@@ -1,0 +1,2087 @@
+{
+  "frames-chromium-headed-prod-before": {
+    "engine": "chromium-headed",
+    "mode": "prod",
+    "label": "before",
+    "traced": "no",
+    "url": "http://127.0.0.1:4174",
+    "rows": [
+      {
+        "name": "A scroll Dashboard",
+        "samples": 74,
+        "p50": 16.7,
+        "p95": 50,
+        "p99": 67.1,
+        "over16_7": 29,
+        "over20": 10,
+        "longTasks": [],
+        "loaf": [
+          {
+            "start": 4527.600000023842,
+            "duration": 50.29999998211861,
+            "blocking": 0,
+            "render": 4577.600000023842,
+            "style": 4577.800000011921,
+            "scripts": []
+          },
+          {
+            "start": 5706.200000017881,
+            "duration": 54,
+            "blocking": 0,
+            "render": 5759.700000017881,
+            "style": 5760,
+            "scripts": []
+          },
+          {
+            "start": 5761.300000011921,
+            "duration": 53.69999998807907,
+            "blocking": 0,
+            "render": 5814.600000023842,
+            "style": 5814.9000000059605,
+            "scripts": []
+          }
+        ],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "B Dashboard \u2192 Materia Prima",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.7,
+        "over16_7": 22,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "C Materia Prima \u2192 Producto Terminado",
+        "samples": 91,
+        "p50": 16.7,
+        "p95": 17.7,
+        "p99": 32.48,
+        "over16_7": 37,
+        "over20": 1,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "D Producto Terminado \u2192 Reportes",
+        "samples": 91,
+        "p50": 16.7,
+        "p95": 17.7,
+        "p99": 33.28,
+        "over16_7": 38,
+        "over20": 1,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 4
+      },
+      {
+        "name": "E colapsar/expandir sidebar",
+        "samples": 91,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 33.24,
+        "over16_7": 34,
+        "over20": 1,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 8
+      },
+      {
+        "name": "F cambiar mes calendario",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.7,
+        "p99": 17.8,
+        "over16_7": 48,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "G completar tarea",
+        "samples": 91,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.8,
+        "over16_7": 48,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "H abrir modal",
+        "samples": 55,
+        "p50": 16.7,
+        "p95": 17.7,
+        "p99": 866.8,
+        "over16_7": 31,
+        "over20": 2,
+        "longTasks": [
+          {
+            "start": 20232.90000000596,
+            "duration": 65,
+            "name": "self"
+          }
+        ],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "I cerrar modal",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.8,
+        "over16_7": 51,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "J escribir en buscador",
+        "samples": 89,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 33.4,
+        "over16_7": 42,
+        "over20": 1,
+        "longTasks": [],
+        "loaf": [
+          {
+            "start": 26503.100000023842,
+            "duration": 50,
+            "blocking": 0,
+            "render": 26553.100000023842,
+            "style": 26553.100000023842,
+            "scripts": []
+          }
+        ],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "K hover repetido cards",
+        "samples": 85,
+        "p50": 16.7,
+        "p95": 33.3,
+        "p99": 49,
+        "over16_7": 49,
+        "over20": 6,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      }
+    ]
+  },
+  "frames-chromium-headed-prod-after-power": {
+    "engine": "chromium-headed",
+    "mode": "prod",
+    "label": "after-power",
+    "traced": "no",
+    "url": "http://127.0.0.1:4174",
+    "rows": [
+      {
+        "name": "A scroll Dashboard",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.7,
+        "p99": 17.7,
+        "over16_7": 23,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "B Dashboard \u2192 Materia Prima",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.7,
+        "over16_7": 29,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "C Materia Prima \u2192 Producto Terminado",
+        "samples": 91,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 33.32,
+        "over16_7": 35,
+        "over20": 1,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "D Producto Terminado \u2192 Reportes",
+        "samples": 91,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 33.32,
+        "over16_7": 38,
+        "over20": 1,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 4
+      },
+      {
+        "name": "E colapsar/expandir sidebar",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.8,
+        "over16_7": 46,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 8
+      },
+      {
+        "name": "F cambiar mes calendario",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.7,
+        "over16_7": 43,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "G completar tarea",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.7,
+        "over16_7": 46,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "H abrir modal",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.7,
+        "over16_7": 38,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "I cerrar modal",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.7,
+        "over16_7": 49,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "J escribir en buscador",
+        "samples": 90,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.7,
+        "over16_7": 49,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "K hover repetido cards",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.7,
+        "over16_7": 42,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      }
+    ]
+  },
+  "frames-webkit-prod-before": {
+    "engine": "webkit",
+    "mode": "prod",
+    "label": "before",
+    "traced": "no",
+    "url": "http://127.0.0.1:4174",
+    "rows": [
+      {
+        "name": "A scroll Dashboard",
+        "samples": 48,
+        "p50": 33,
+        "p95": 34,
+        "p99": 35,
+        "over16_7": 46,
+        "over20": 46,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "B Dashboard \u2192 Materia Prima",
+        "samples": 51,
+        "p50": 33,
+        "p95": 43,
+        "p99": 47,
+        "over16_7": 46,
+        "over20": 43,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "C Materia Prima \u2192 Producto Terminado",
+        "samples": 48,
+        "p50": 33,
+        "p95": 34,
+        "p99": 50,
+        "over16_7": 46,
+        "over20": 45,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "D Producto Terminado \u2192 Reportes",
+        "samples": 47,
+        "p50": 33,
+        "p95": 43,
+        "p99": 62,
+        "over16_7": 45,
+        "over20": 44,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 4
+      },
+      {
+        "name": "E colapsar/expandir sidebar",
+        "samples": 54,
+        "p50": 33,
+        "p95": 34,
+        "p99": 42,
+        "over16_7": 46,
+        "over20": 46,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 8
+      },
+      {
+        "name": "F cambiar mes calendario",
+        "samples": 50,
+        "p50": 33,
+        "p95": 34,
+        "p99": 35,
+        "over16_7": 46,
+        "over20": 46,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "G completar tarea",
+        "samples": 52,
+        "p50": 33,
+        "p95": 35,
+        "p99": 35,
+        "over16_7": 46,
+        "over20": 46,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "H abrir modal",
+        "samples": 48,
+        "p50": 33,
+        "p95": 44,
+        "p99": 53,
+        "over16_7": 44,
+        "over20": 44,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "I cerrar modal",
+        "samples": 44,
+        "p50": 33,
+        "p95": 34,
+        "p99": 35,
+        "over16_7": 44,
+        "over20": 44,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "J escribir en buscador",
+        "samples": 46,
+        "p50": 33,
+        "p95": 35,
+        "p99": 35,
+        "over16_7": 46,
+        "over20": 46,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "K hover repetido cards",
+        "samples": 62,
+        "p50": 33,
+        "p95": 34,
+        "p99": 35,
+        "over16_7": 46,
+        "over20": 46,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      }
+    ]
+  },
+  "frames-webkit-prod-after-power": {
+    "engine": "webkit",
+    "mode": "prod",
+    "label": "after-power",
+    "traced": "no",
+    "url": "http://127.0.0.1:4174",
+    "rows": [
+      {
+        "name": "A scroll Dashboard",
+        "samples": 91,
+        "p50": 17,
+        "p95": 18,
+        "p99": 23,
+        "over16_7": 55,
+        "over20": 1,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "B Dashboard \u2192 Materia Prima",
+        "samples": 89,
+        "p50": 17,
+        "p95": 23,
+        "p99": 53,
+        "over16_7": 54,
+        "over20": 5,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "C Materia Prima \u2192 Producto Terminado",
+        "samples": 91,
+        "p50": 17,
+        "p95": 20,
+        "p99": 42,
+        "over16_7": 49,
+        "over20": 4,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "D Producto Terminado \u2192 Reportes",
+        "samples": 89,
+        "p50": 17,
+        "p95": 18,
+        "p99": 62,
+        "over16_7": 50,
+        "over20": 4,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 4
+      },
+      {
+        "name": "E colapsar/expandir sidebar",
+        "samples": 95,
+        "p50": 17,
+        "p95": 21,
+        "p99": 33,
+        "over16_7": 52,
+        "over20": 6,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 8
+      },
+      {
+        "name": "F cambiar mes calendario",
+        "samples": 94,
+        "p50": 17,
+        "p95": 18,
+        "p99": 18,
+        "over16_7": 51,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "G completar tarea",
+        "samples": 94,
+        "p50": 17,
+        "p95": 17,
+        "p99": 18,
+        "over16_7": 54,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "H abrir modal",
+        "samples": 90,
+        "p50": 17,
+        "p95": 18,
+        "p99": 43,
+        "over16_7": 52,
+        "over20": 4,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "I cerrar modal",
+        "samples": 90,
+        "p50": 17,
+        "p95": 18,
+        "p99": 36,
+        "over16_7": 56,
+        "over20": 3,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "J escribir en buscador",
+        "samples": 91,
+        "p50": 17,
+        "p95": 18,
+        "p99": 27,
+        "over16_7": 51,
+        "over20": 1,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "K hover repetido cards",
+        "samples": 106,
+        "p50": 16,
+        "p95": 18,
+        "p99": 18,
+        "over16_7": 49,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      }
+    ]
+  },
+  "cpu-chromium-headed-prod-before": {
+    "rows": {
+      "A scroll Dashboard": {
+        "scripting": 112.715,
+        "style": 0.0,
+        "layout": 0.0,
+        "paint": 6.741,
+        "gc": 0.0,
+        "raster": 14.062000000000001,
+        "draw": 99.88499999999999,
+        "gpuWait": 994.4960000000001
+      },
+      "B Dashboard \u2192 Materia Prima": {
+        "scripting": 42.485,
+        "style": 21.215,
+        "layout": 11.446000000000002,
+        "paint": 14.762,
+        "gc": 1.84,
+        "raster": 13.903,
+        "draw": 38.802,
+        "gpuWait": 354.01700000000005
+      },
+      "C Materia Prima \u2192 Producto Terminado": {
+        "scripting": 31.33,
+        "style": 28.355999999999998,
+        "layout": 8.366,
+        "paint": 12.683,
+        "gc": 0.0,
+        "raster": 38.223,
+        "draw": 37.588,
+        "gpuWait": 353.33500000000004
+      },
+      "D Producto Terminado \u2192 Reportes": {
+        "scripting": 118.578,
+        "style": 16.807000000000002,
+        "layout": 9.522,
+        "paint": 11.751999999999999,
+        "gc": 9.666,
+        "raster": 8.957,
+        "draw": 40.281,
+        "gpuWait": 222.65
+      },
+      "E colapsar/expandir sidebar": {
+        "scripting": 95.193,
+        "style": 58.955,
+        "layout": 40.507,
+        "paint": 13.538,
+        "gc": 28.912,
+        "raster": 35.722,
+        "draw": 15.898,
+        "gpuWait": 30.304
+      },
+      "F cambiar mes calendario": {
+        "scripting": 14.905000000000001,
+        "style": 3.1109999999999998,
+        "layout": 5.987,
+        "paint": 3.8739999999999997,
+        "gc": 0.0,
+        "raster": 6.818,
+        "draw": 7.564,
+        "gpuWait": 15.683
+      },
+      "G completar tarea": {
+        "scripting": 17.891000000000002,
+        "style": 4.244,
+        "layout": 0.622,
+        "paint": 2.657,
+        "gc": 0.0,
+        "raster": 4.25,
+        "draw": 5.413,
+        "gpuWait": 44.83
+      },
+      "H abrir modal": {
+        "scripting": 48.007000000000005,
+        "style": 18.705,
+        "layout": 11.378,
+        "paint": 7.271,
+        "gc": 0.0,
+        "raster": 6.526,
+        "draw": 21.886,
+        "gpuWait": 229.04700000000003
+      },
+      "I cerrar modal": {
+        "scripting": 33.213,
+        "style": 15.854,
+        "layout": 1.314,
+        "paint": 4.909000000000001,
+        "gc": 0.0,
+        "raster": 3.7489999999999997,
+        "draw": 33.957,
+        "gpuWait": 49.632999999999996
+      },
+      "J escribir en buscador": {
+        "scripting": 45.839,
+        "style": 2.477,
+        "layout": 9.55,
+        "paint": 9.992,
+        "gc": 0.0,
+        "raster": 12.901,
+        "draw": 27.908,
+        "gpuWait": 14.508
+      },
+      "K hover repetido cards": {
+        "scripting": 31.314,
+        "style": 24.613,
+        "layout": 0.444,
+        "paint": 25.431,
+        "gc": 0.0,
+        "raster": 11.809000000000001,
+        "draw": 100.775,
+        "gpuWait": 484.924
+      }
+    },
+    "long": [
+      {
+        "name": "FunctionCall",
+        "ms": 58.78,
+        "case": "A scroll Dashboard",
+        "args": {
+          "data": {
+            "columnNumber": 50,
+            "frame": "C10E2766845124B5F6B09BF84431ED5C",
+            "functionName": "tick",
+            "isolate": "10668094210821582762",
+            "lineNumber": 1,
+            "sampleTraceId": 1921004136791722,
+            "scriptId": "63",
+            "url": ""
+          }
+        }
+      },
+      {
+        "name": "EventDispatch",
+        "ms": 63.32,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "type": "click"
+          }
+        }
+      },
+      {
+        "name": "FunctionCall",
+        "ms": 63.0,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "columnNumber": 124425,
+            "frame": "C10E2766845124B5F6B09BF84431ED5C",
+            "functionName": "",
+            "isolate": "10668094210821582762",
+            "lineNumber": 9,
+            "sampleTraceId": 1921004136780735,
+            "scriptId": "5",
+            "url": "http://127.0.0.1:4174/assets/index-CgS2viTe.js"
+          }
+        }
+      }
+    ]
+  },
+  "cpu-chromium-headed-prod-after-power": {
+    "rows": {
+      "A scroll Dashboard": {
+        "scripting": 10.036999999999999,
+        "style": 0.0,
+        "layout": 0.0,
+        "paint": 4.823,
+        "gc": 1.812,
+        "raster": 6.747,
+        "draw": 54.47,
+        "gpuWait": 27.798000000000002
+      },
+      "B Dashboard \u2192 Materia Prima": {
+        "scripting": 22.241,
+        "style": 10.662,
+        "layout": 4.715,
+        "paint": 6.654,
+        "gc": 0.0,
+        "raster": 4.348000000000001,
+        "draw": 13.713999999999999,
+        "gpuWait": 88.934
+      },
+      "C Materia Prima \u2192 Producto Terminado": {
+        "scripting": 18.159,
+        "style": 10.058,
+        "layout": 3.786,
+        "paint": 6.208,
+        "gc": 0.0,
+        "raster": 3.934,
+        "draw": 11.672,
+        "gpuWait": 72.265
+      },
+      "D Producto Terminado \u2192 Reportes": {
+        "scripting": 63.362,
+        "style": 9.942,
+        "layout": 7.433,
+        "paint": 5.882,
+        "gc": 3.077,
+        "raster": 5.662,
+        "draw": 15.112,
+        "gpuWait": 56.915
+      },
+      "E colapsar/expandir sidebar": {
+        "scripting": 55.413,
+        "style": 28.361,
+        "layout": 7.2010000000000005,
+        "paint": 6.8260000000000005,
+        "gc": 11.892,
+        "raster": 5.114,
+        "draw": 7.02,
+        "gpuWait": 64.447
+      },
+      "F cambiar mes calendario": {
+        "scripting": 10.422,
+        "style": 2.065,
+        "layout": 2.748,
+        "paint": 2.504,
+        "gc": 0.0,
+        "raster": 3.466,
+        "draw": 4.0649999999999995,
+        "gpuWait": 17.837
+      },
+      "G completar tarea": {
+        "scripting": 17.118000000000002,
+        "style": 3.124,
+        "layout": 0.659,
+        "paint": 2.7190000000000003,
+        "gc": 0.0,
+        "raster": 3.71,
+        "draw": 5.763,
+        "gpuWait": 52.454
+      },
+      "H abrir modal": {
+        "scripting": 49.783,
+        "style": 17.456,
+        "layout": 11.643,
+        "paint": 5.962,
+        "gc": 0.0,
+        "raster": 4.495,
+        "draw": 17.406,
+        "gpuWait": 132.99
+      },
+      "I cerrar modal": {
+        "scripting": 22.596,
+        "style": 10.017,
+        "layout": 0.8340000000000001,
+        "paint": 3.184,
+        "gc": 0.0,
+        "raster": 1.218,
+        "draw": 17.825,
+        "gpuWait": 26.838
+      },
+      "J escribir en buscador": {
+        "scripting": 18.69,
+        "style": 1.169,
+        "layout": 3.9690000000000003,
+        "paint": 4.59,
+        "gc": 0.0,
+        "raster": 3.515,
+        "draw": 13.608,
+        "gpuWait": 8.673
+      },
+      "K hover repetido cards": {
+        "scripting": 18.216,
+        "style": 12.826,
+        "layout": 0.246,
+        "paint": 10.489,
+        "gc": 0.0,
+        "raster": 5.284,
+        "draw": 39.272,
+        "gpuWait": 16.165
+      }
+    },
+    "long": []
+  },
+  "render-production": {
+    "initial": {
+      "App": 4,
+      "AppShell": 2,
+      "Navigation": 11,
+      "Header": 3,
+      "DashboardPlanner": 2,
+      "Dashboard": 1,
+      "DashboardCharts": 1
+    },
+    "rows": [
+      {
+        "name": "open/close modal",
+        "counts": {
+          "App": 2,
+          "AppShell": 2,
+          "Navigation": 5,
+          "Header": 2,
+          "RawTable": 2
+        }
+      },
+      {
+        "name": "collapse/expand sidebar",
+        "counts": {
+          "AppShell": 2,
+          "Navigation": 8,
+          "Header": 2
+        }
+      },
+      {
+        "name": "navigate Dashboard \u2192 Reportes",
+        "counts": {
+          "App": 1,
+          "AppShell": 1,
+          "Navigation": 4,
+          "Header": 1
+        }
+      },
+      {
+        "name": "search Reportes",
+        "counts": {
+          "Navigation": 9,
+          "Reportes": 9
+        }
+      },
+      {
+        "name": "calendar month",
+        "counts": {
+          "Navigation": 1,
+          "Reportes": 1,
+          "DashboardPlanner": 1
+        }
+      },
+      {
+        "name": "complete task",
+        "counts": {
+          "Navigation": 2,
+          "Reportes": 2,
+          "DashboardPlanner": 2
+        }
+      }
+    ]
+  },
+  "login-chromium-headed-after-power": {
+    "p50": 16.600000000000136,
+    "p95": 17.59999999999991,
+    "p99": 33.39999999999998,
+    "samples": 143,
+    "longTasks": []
+  },
+  "frames-chromium-headed-dev-after-power": {
+    "engine": "chromium-headed",
+    "mode": "dev",
+    "label": "after-power",
+    "traced": "no",
+    "url": "http://127.0.0.1:5180",
+    "rows": [
+      {
+        "name": "A scroll Dashboard",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.6,
+        "over16_7": 28,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "B Dashboard \u2192 Materia Prima",
+        "samples": 88,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 50.4,
+        "over16_7": 30,
+        "over20": 2,
+        "longTasks": [
+          {
+            "start": 5748,
+            "duration": 60,
+            "name": "self"
+          },
+          {
+            "start": 7032.5999999940395,
+            "duration": 63,
+            "name": "self"
+          }
+        ],
+        "loaf": [
+          {
+            "start": 5743.800000011921,
+            "duration": 65.40000000596046,
+            "blocking": 11.1,
+            "render": 5808.9000000059605,
+            "style": 5809.200000017881,
+            "scripts": [
+              {
+                "source": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b",
+                "fn": "dispatchDiscreteEvent",
+                "duration": 55.400000005960464,
+                "invoker": "DIV#root.onclick",
+                "forcedLayout": 0
+              }
+            ]
+          },
+          {
+            "start": 7027.9000000059605,
+            "duration": 68.40000000596046,
+            "blocking": 13.5,
+            "render": 7096,
+            "style": 7096.300000011921,
+            "scripts": [
+              {
+                "source": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b",
+                "fn": "dispatchDiscreteEvent",
+                "duration": 58.5,
+                "invoker": "DIV#root.onclick",
+                "forcedLayout": 0
+              }
+            ]
+          }
+        ],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "C Materia Prima \u2192 Producto Terminado",
+        "samples": 89,
+        "p50": 16.7,
+        "p95": 17.7,
+        "p99": 33.4,
+        "over16_7": 39,
+        "over20": 3,
+        "longTasks": [
+          {
+            "start": 8249.200000017881,
+            "duration": 55,
+            "name": "self"
+          },
+          {
+            "start": 9515.5,
+            "duration": 55,
+            "name": "self"
+          }
+        ],
+        "loaf": [
+          {
+            "start": 8245.40000000596,
+            "duration": 59.5,
+            "blocking": 5.6,
+            "render": 8304.59999999404,
+            "style": 8304.90000000596,
+            "scripts": [
+              {
+                "source": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b",
+                "fn": "dispatchDiscreteEvent",
+                "duration": 50.20000001788139,
+                "invoker": "DIV#root.onclick",
+                "forcedLayout": 0
+              }
+            ]
+          },
+          {
+            "start": 9511.40000000596,
+            "duration": 59.5,
+            "blocking": 5.4,
+            "render": 9570.59999999404,
+            "style": 9570.90000000596,
+            "scripts": [
+              {
+                "source": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b",
+                "fn": "dispatchDiscreteEvent",
+                "duration": 50.30000001192093,
+                "invoker": "DIV#root.onclick",
+                "forcedLayout": 0
+              }
+            ]
+          }
+        ],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "D Producto Terminado \u2192 Reportes",
+        "samples": 86,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 50,
+        "over16_7": 39,
+        "over20": 4,
+        "longTasks": [
+          {
+            "start": 10749.09999999404,
+            "duration": 70,
+            "name": "self"
+          },
+          {
+            "start": 12012.200000017881,
+            "duration": 69,
+            "name": "self"
+          }
+        ],
+        "loaf": [
+          {
+            "start": 10749.09999999404,
+            "duration": 71.90000000596046,
+            "blocking": 21.6,
+            "render": 10820.09999999404,
+            "style": 10820.700000017881,
+            "scripts": [
+              {
+                "source": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b",
+                "fn": "performWorkUntilDeadline",
+                "duration": 70.80000001192093,
+                "invoker": "MessagePort.onmessage",
+                "forcedLayout": 1.9
+              }
+            ]
+          },
+          {
+            "start": 12012.200000017881,
+            "duration": 71.09999999403954,
+            "blocking": 20.8,
+            "render": 12082.200000017881,
+            "style": 12083.09999999404,
+            "scripts": [
+              {
+                "source": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b",
+                "fn": "performWorkUntilDeadline",
+                "duration": 69.5,
+                "invoker": "MessagePort.onmessage",
+                "forcedLayout": 0.9
+              }
+            ]
+          }
+        ],
+        "resizeCallbacks": 4
+      },
+      {
+        "name": "E colapsar/expandir sidebar",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.6,
+        "over16_7": 37,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 8
+      },
+      {
+        "name": "F cambiar mes calendario",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.9,
+        "over16_7": 38,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "G completar tarea",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.7,
+        "over16_7": 51,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "H abrir modal",
+        "samples": 89,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 49.1,
+        "over16_7": 39,
+        "over20": 2,
+        "longTasks": [
+          {
+            "start": 19447.59999999404,
+            "duration": 70,
+            "name": "self"
+          },
+          {
+            "start": 20715.09999999404,
+            "duration": 58,
+            "name": "self"
+          }
+        ],
+        "loaf": [
+          {
+            "start": 19444.40000000596,
+            "duration": 74.59999999403954,
+            "blocking": 21.2,
+            "render": 19518.09999999404,
+            "style": 19518.40000000596,
+            "scripts": [
+              {
+                "source": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b",
+                "fn": "dispatchDiscreteEvent",
+                "duration": 68.19999998807907,
+                "invoker": "DIV#root.onclick",
+                "forcedLayout": 9.3
+              }
+            ]
+          },
+          {
+            "start": 20711.30000001192,
+            "duration": 63.599999994039536,
+            "blocking": 9.8,
+            "render": 20773.90000000596,
+            "style": 20774.20000001788,
+            "scripts": [
+              {
+                "source": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b",
+                "fn": "dispatchDiscreteEvent",
+                "duration": 57.20000001788139,
+                "invoker": "DIV#root.onclick",
+                "forcedLayout": 3.2
+              }
+            ]
+          }
+        ],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "I cerrar modal",
+        "samples": 89,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 50.9,
+        "over16_7": 44,
+        "over20": 2,
+        "longTasks": [
+          {
+            "start": 22302.30000001192,
+            "duration": 52,
+            "name": "self"
+          },
+          {
+            "start": 23848.09999999404,
+            "duration": 59,
+            "name": "self"
+          }
+        ],
+        "loaf": [
+          {
+            "start": 22302.20000001788,
+            "duration": 53.29999998211861,
+            "blocking": 3.1,
+            "render": 22354.5,
+            "style": 22355.5,
+            "scripts": [
+              {
+                "source": "http://127.0.0.1:5180/src/components/compComunes/PopUp.jsx",
+                "fn": "onKey",
+                "duration": 52,
+                "invoker": "#document.onkeydown",
+                "forcedLayout": 2.5
+              }
+            ]
+          },
+          {
+            "start": 23848.09999999404,
+            "duration": 60.80000001192093,
+            "blocking": 10.7,
+            "render": 23907.70000001788,
+            "style": 23908.80000001192,
+            "scripts": [
+              {
+                "source": "http://127.0.0.1:5180/src/components/compComunes/PopUp.jsx",
+                "fn": "onKey",
+                "duration": 59.30000001192093,
+                "invoker": "#document.onkeydown",
+                "forcedLayout": 2.8
+              }
+            ]
+          }
+        ],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "J escribir en buscador",
+        "samples": 91,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.7,
+        "over16_7": 53,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "K hover repetido cards",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.6,
+        "over16_7": 45,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      }
+    ]
+  },
+  "frames-chromium-headed-prod-preview": {
+    "engine": "chromium-headed",
+    "mode": "prod",
+    "label": "preview",
+    "traced": "no",
+    "url": "http://127.0.0.1:4180",
+    "rows": [
+      {
+        "name": "A scroll Dashboard",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.7,
+        "p99": 17.7,
+        "over16_7": 36,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "B Dashboard \u2192 Materia Prima",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.7,
+        "p99": 17.7,
+        "over16_7": 24,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "C Materia Prima \u2192 Producto Terminado",
+        "samples": 91,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 33.32,
+        "over16_7": 32,
+        "over20": 1,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "D Producto Terminado \u2192 Reportes",
+        "samples": 91,
+        "p50": 16.7,
+        "p95": 17.7,
+        "p99": 33.2,
+        "over16_7": 37,
+        "over20": 1,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 4
+      },
+      {
+        "name": "E colapsar/expandir sidebar",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.7,
+        "p99": 17.7,
+        "over16_7": 38,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 8
+      },
+      {
+        "name": "F cambiar mes calendario",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.7,
+        "p99": 17.7,
+        "over16_7": 41,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "G completar tarea",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.7,
+        "p99": 17.7,
+        "over16_7": 49,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "H abrir modal",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.7,
+        "p99": 33.3,
+        "over16_7": 41,
+        "over20": 1,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "I cerrar modal",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.7,
+        "over16_7": 42,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "J escribir en buscador",
+        "samples": 90,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.7,
+        "over16_7": 52,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      },
+      {
+        "name": "K hover repetido cards",
+        "samples": 92,
+        "p50": 16.7,
+        "p95": 17.6,
+        "p99": 17.7,
+        "over16_7": 49,
+        "over20": 0,
+        "longTasks": [],
+        "loaf": [],
+        "resizeCallbacks": 0
+      }
+    ]
+  },
+  "cpu-chromium-headed-dev-after-power": {
+    "rows": {
+      "A scroll Dashboard": {
+        "scripting": 9.57,
+        "style": 0.0,
+        "layout": 0.0,
+        "paint": 4.574,
+        "gc": 0.0,
+        "raster": 6.271,
+        "draw": 52.527,
+        "gpuWait": 21.733
+      },
+      "B Dashboard \u2192 Materia Prima": {
+        "scripting": 88.068,
+        "style": 23.396,
+        "layout": 10.493,
+        "paint": 11.596,
+        "gc": 11.293,
+        "raster": 9.808,
+        "draw": 16.203,
+        "gpuWait": 195.89000000000001
+      },
+      "C Materia Prima \u2192 Producto Terminado": {
+        "scripting": 79.161,
+        "style": 8.545,
+        "layout": 2.998,
+        "paint": 5.307,
+        "gc": 0.0,
+        "raster": 4.7620000000000005,
+        "draw": 14.244,
+        "gpuWait": 81.608
+      },
+      "D Producto Terminado \u2192 Reportes": {
+        "scripting": 234.7,
+        "style": 8.204,
+        "layout": 12.786000000000001,
+        "paint": 5.249,
+        "gc": 9.519,
+        "raster": 6.981,
+        "draw": 17.551000000000002,
+        "gpuWait": 53.542
+      },
+      "E colapsar/expandir sidebar": {
+        "scripting": 156.769,
+        "style": 20.372,
+        "layout": 5.4030000000000005,
+        "paint": 5.902,
+        "gc": 5.664,
+        "raster": 6.207,
+        "draw": 7.135,
+        "gpuWait": 62.896
+      },
+      "F cambiar mes calendario": {
+        "scripting": 38.569,
+        "style": 2.801,
+        "layout": 3.0919999999999996,
+        "paint": 2.7600000000000002,
+        "gc": 0.0,
+        "raster": 4.383,
+        "draw": 4.4079999999999995,
+        "gpuWait": 20.232
+      },
+      "G completar tarea": {
+        "scripting": 52.013999999999996,
+        "style": 3.496,
+        "layout": 0.494,
+        "paint": 2.45,
+        "gc": 7.442,
+        "raster": 3.903,
+        "draw": 5.196,
+        "gpuWait": 5.377999999999999
+      },
+      "H abrir modal": {
+        "scripting": 124.197,
+        "style": 12.702,
+        "layout": 20.948999999999998,
+        "paint": 5.799,
+        "gc": 2.282,
+        "raster": 4.394,
+        "draw": 19.253,
+        "gpuWait": 120.23400000000001
+      },
+      "I cerrar modal": {
+        "scripting": 122.283,
+        "style": 6.288,
+        "layout": 0.46799999999999997,
+        "paint": 1.87,
+        "gc": 2.751,
+        "raster": 0.7909999999999999,
+        "draw": 12.693,
+        "gpuWait": 31.049999999999997
+      },
+      "J escribir en buscador": {
+        "scripting": 102.4,
+        "style": 1.109,
+        "layout": 3.638,
+        "paint": 3.682,
+        "gc": 2.197,
+        "raster": 7.215,
+        "draw": 10.14,
+        "gpuWait": 15.149
+      },
+      "K hover repetido cards": {
+        "scripting": 20.376,
+        "style": 12.761,
+        "layout": 0.22799999999999998,
+        "paint": 10.626000000000001,
+        "gc": 0.0,
+        "raster": 5.369,
+        "draw": 41.113,
+        "gpuWait": 24.697
+      }
+    },
+    "long": [
+      {
+        "name": "FunctionCall",
+        "ms": 50.29,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "columnNumber": 40,
+            "frame": "9F98C7A888CFAED267A8048FC2A99626",
+            "functionName": "performWorkUntilDeadline",
+            "isolate": "13822446181145291756",
+            "lineNumber": 14,
+            "sampleTraceId": 2196005905288350,
+            "scriptId": "12",
+            "url": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b"
+          }
+        }
+      },
+      {
+        "name": "FunctionCall",
+        "ms": 91.25,
+        "case": "D Producto Terminado \u2192 Reportes",
+        "args": {
+          "data": {
+            "columnNumber": 40,
+            "frame": "9F98C7A888CFAED267A8048FC2A99626",
+            "functionName": "performWorkUntilDeadline",
+            "isolate": "13822446181145291756",
+            "lineNumber": 14,
+            "sampleTraceId": 2196005905300695,
+            "scriptId": "12",
+            "url": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b"
+          }
+        }
+      },
+      {
+        "name": "FunctionCall",
+        "ms": 64.25,
+        "case": "D Producto Terminado \u2192 Reportes",
+        "args": {
+          "data": {
+            "columnNumber": 40,
+            "frame": "9F98C7A888CFAED267A8048FC2A99626",
+            "functionName": "performWorkUntilDeadline",
+            "isolate": "13822446181145291756",
+            "lineNumber": 14,
+            "sampleTraceId": 2196005905298487,
+            "scriptId": "12",
+            "url": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b"
+          }
+        }
+      },
+      {
+        "name": "EventDispatch",
+        "ms": 74.54,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "type": "click"
+          }
+        }
+      },
+      {
+        "name": "FunctionCall",
+        "ms": 74.43,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "columnNumber": 35,
+            "frame": "9F98C7A888CFAED267A8048FC2A99626",
+            "functionName": "",
+            "isolate": "13822446181145291756",
+            "lineNumber": 13525,
+            "sampleTraceId": 2196005905295363,
+            "scriptId": "12",
+            "url": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b"
+          }
+        }
+      },
+      {
+        "name": "EventDispatch",
+        "ms": 50.93,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "type": "click"
+          }
+        }
+      },
+      {
+        "name": "FunctionCall",
+        "ms": 50.81,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "columnNumber": 35,
+            "frame": "9F98C7A888CFAED267A8048FC2A99626",
+            "functionName": "",
+            "isolate": "13822446181145291756",
+            "lineNumber": 13525,
+            "sampleTraceId": 2196005905275555,
+            "scriptId": "12",
+            "url": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b"
+          }
+        }
+      },
+      {
+        "name": "EventDispatch",
+        "ms": 76.88,
+        "case": "H abrir modal",
+        "args": {
+          "data": {
+            "type": "click"
+          }
+        }
+      },
+      {
+        "name": "FunctionCall",
+        "ms": 76.69,
+        "case": "H abrir modal",
+        "args": {
+          "data": {
+            "columnNumber": 35,
+            "frame": "9F98C7A888CFAED267A8048FC2A99626",
+            "functionName": "",
+            "isolate": "13822446181145291756",
+            "lineNumber": 13525,
+            "sampleTraceId": 2196005905276693,
+            "scriptId": "12",
+            "url": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b"
+          }
+        }
+      },
+      {
+        "name": "EventDispatch",
+        "ms": 58.03,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "type": "keydown"
+          }
+        }
+      },
+      {
+        "name": "FunctionCall",
+        "ms": 57.46,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "columnNumber": 35,
+            "frame": "9F98C7A888CFAED267A8048FC2A99626",
+            "functionName": "",
+            "isolate": "13822446181145291756",
+            "lineNumber": 13525,
+            "sampleTraceId": 2196005905276620,
+            "scriptId": "12",
+            "url": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b"
+          }
+        }
+      },
+      {
+        "name": "EventDispatch",
+        "ms": 56.8,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "type": "keydown"
+          }
+        }
+      },
+      {
+        "name": "FunctionCall",
+        "ms": 56.58,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "columnNumber": 35,
+            "frame": "9F98C7A888CFAED267A8048FC2A99626",
+            "functionName": "",
+            "isolate": "13822446181145291756",
+            "lineNumber": 13525,
+            "sampleTraceId": 2196005905273495,
+            "scriptId": "12",
+            "url": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b"
+          }
+        }
+      },
+      {
+        "name": "EventDispatch",
+        "ms": 59.13,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "type": "click"
+          }
+        }
+      },
+      {
+        "name": "FunctionCall",
+        "ms": 58.87,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "columnNumber": 35,
+            "frame": "9F98C7A888CFAED267A8048FC2A99626",
+            "functionName": "",
+            "isolate": "13822446181145291756",
+            "lineNumber": 13525,
+            "sampleTraceId": 2196005905273981,
+            "scriptId": "12",
+            "url": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b"
+          }
+        }
+      },
+      {
+        "name": "EventDispatch",
+        "ms": 60.38,
+        "case": "I cerrar modal",
+        "args": {
+          "data": {
+            "type": "keydown"
+          }
+        }
+      },
+      {
+        "name": "FunctionCall",
+        "ms": 60.02,
+        "case": "I cerrar modal",
+        "args": {
+          "data": {
+            "columnNumber": 35,
+            "frame": "9F98C7A888CFAED267A8048FC2A99626",
+            "functionName": "",
+            "isolate": "13822446181145291756",
+            "lineNumber": 13525,
+            "sampleTraceId": 2196005905274734,
+            "scriptId": "12",
+            "url": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b"
+          }
+        }
+      },
+      {
+        "name": "EventDispatch",
+        "ms": 57.65,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "type": "click"
+          }
+        }
+      },
+      {
+        "name": "FunctionCall",
+        "ms": 57.51,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "columnNumber": 35,
+            "frame": "9F98C7A888CFAED267A8048FC2A99626",
+            "functionName": "",
+            "isolate": "13822446181145291756",
+            "lineNumber": 13525,
+            "sampleTraceId": 2196005905270813,
+            "scriptId": "12",
+            "url": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b"
+          }
+        }
+      },
+      {
+        "name": "EventDispatch",
+        "ms": 58.23,
+        "case": "I cerrar modal",
+        "args": {
+          "data": {
+            "type": "keydown"
+          }
+        }
+      },
+      {
+        "name": "FunctionCall",
+        "ms": 57.91,
+        "case": "I cerrar modal",
+        "args": {
+          "data": {
+            "columnNumber": 35,
+            "frame": "9F98C7A888CFAED267A8048FC2A99626",
+            "functionName": "",
+            "isolate": "13822446181145291756",
+            "lineNumber": 13525,
+            "sampleTraceId": 2196005905271665,
+            "scriptId": "12",
+            "url": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b"
+          }
+        }
+      },
+      {
+        "name": "FunctionCall",
+        "ms": 59.67,
+        "case": "outside window",
+        "args": {
+          "data": {
+            "columnNumber": 40,
+            "frame": "9F98C7A888CFAED267A8048FC2A99626",
+            "functionName": "performWorkUntilDeadline",
+            "isolate": "13822446181145291756",
+            "lineNumber": 14,
+            "sampleTraceId": 2196005905283337,
+            "scriptId": "12",
+            "url": "http://127.0.0.1:5180/node_modules/.vite/deps/react-dom_client.js?v=5211a15b"
+          }
+        }
+      }
+    ]
+  },
+  "dev-react-profile": {
+    "commits": [
+      {
+        "duration": 4.4000000059604645,
+        "baseDuration": 3.300000011920929,
+        "time": 141.39999997615814
+      },
+      {
+        "duration": 11.5,
+        "baseDuration": 6.699999958276749,
+        "time": 181.09999999403954
+      },
+      {
+        "duration": 3.699999988079071,
+        "baseDuration": 4.39999994635582,
+        "time": 259.2999999821186
+      },
+      {
+        "duration": 3.300000011920929,
+        "baseDuration": 4.0999999940395355,
+        "time": 299.39999997615814
+      },
+      {
+        "duration": 3.100000023841858,
+        "baseDuration": 3.9000000059604645,
+        "time": 339.69999998807907
+      },
+      {
+        "duration": 39.70000001788139,
+        "baseDuration": 34.900000125169754,
+        "time": 380.5
+      },
+      {
+        "duration": 8.599999964237213,
+        "baseDuration": 14.90000006556511,
+        "time": 395.09999999403954
+      },
+      {
+        "duration": 7.799999982118607,
+        "baseDuration": 13.999999940395355,
+        "time": 403.69999998807907
+      },
+      {
+        "duration": 18,
+        "baseDuration": 30.099999964237213,
+        "time": 704.6999999880791
+      },
+      {
+        "duration": 8,
+        "baseDuration": 36.99999991059303,
+        "time": 723.1999999880791
+      },
+      {
+        "duration": 15.699999958276749,
+        "baseDuration": 46.69999986886978,
+        "time": 745.0999999940395
+      },
+      {
+        "duration": 23.400000005960464,
+        "baseDuration": 61.59999990463257,
+        "time": 778.5
+      },
+      {
+        "duration": 10.900000005960464,
+        "baseDuration": 61.49999988079071,
+        "time": 791.3999999761581
+      },
+      {
+        "duration": 0.20000001788139343,
+        "baseDuration": 61.599999874830246,
+        "time": 795
+      },
+      {
+        "duration": 9,
+        "baseDuration": 63.399999886751175,
+        "time": 1049.8999999761581
+      },
+      {
+        "duration": 0.09999999403953552,
+        "baseDuration": 63.399999886751175,
+        "time": 1066.2999999821186
+      },
+      {
+        "duration": 5.799999982118607,
+        "baseDuration": 61.099999874830246,
+        "time": 1073.3999999761581
+      },
+      {
+        "duration": 5.0999999940395355,
+        "baseDuration": 60.59999990463257,
+        "time": 1150.5999999940395
+      },
+      {
+        "duration": 1.0000000298023224,
+        "baseDuration": 59.499999940395355,
+        "time": 1173
+      },
+      {
+        "duration": 16.900000005960464,
+        "baseDuration": 52.699999928474426,
+        "time": 1192.0999999940395
+      },
+      {
+        "duration": 5,
+        "baseDuration": 52.699999898672104,
+        "time": 1213.0999999940395
+      },
+      {
+        "duration": 0.800000011920929,
+        "baseDuration": 52.69999986886978,
+        "time": 1237.699999988079
+      },
+      {
+        "duration": 13.399999976158142,
+        "baseDuration": 49.599999874830246,
+        "time": 1252.5
+      },
+      {
+        "duration": 5.699999988079071,
+        "baseDuration": 12.899999976158142,
+        "time": 1277.2999999821186
+      },
+      {
+        "duration": 0.09999999403953552,
+        "baseDuration": 12.899999976158142,
+        "time": 1277.5999999940395
+      },
+      {
+        "duration": 0,
+        "baseDuration": 12.899999976158142,
+        "time": 1299.3999999761581
+      },
+      {
+        "duration": 12.400000035762787,
+        "baseDuration": 24.30000001192093,
+        "time": 1578.5
+      },
+      {
+        "duration": 2.100000023841858,
+        "baseDuration": 25.900000035762787,
+        "time": 1585.0999999940395
+      },
+      {
+        "duration": 7.699999988079071,
+        "baseDuration": 32.599999994039536,
+        "time": 1595.3999999761581
+      },
+      {
+        "duration": 32.60000002384186,
+        "baseDuration": 61.30000013113022,
+        "time": 1635.5999999940395
+      },
+      {
+        "duration": 12.5,
+        "baseDuration": 61.50000008940697,
+        "time": 1650.5
+      },
+      {
+        "duration": 10.800000011920929,
+        "baseDuration": 61.80000004172325,
+        "time": 2100.899999976158
+      }
+    ],
+    "counts": {
+      "Brand": 1,
+      "IconButton": 3,
+      "Navegacion": 1,
+      "Reportes": 1,
+      "PageHeader": 1,
+      "GlassButton": 1,
+      "StatCard": 4,
+      "GlassCard": 10,
+      "SectionHeader": 5,
+      "ZIndexSvgPortal": 24,
+      "ZIndexLayer": 14,
+      "Background": 2,
+      "HorizontalStripes": 2,
+      "VerticalStripes": 2,
+      "HorizontalGridLines": 2,
+      "LineItem": 10,
+      "VerticalGridLines": 2,
+      "AxisLine": 4,
+      "TickItem": 21,
+      "CartesianLabelContextProvider": 4,
+      "CartesianLabelFromLabelProp": 4,
+      "TooltipBoundingBox": 2,
+      "DefaultTooltipContent": 2,
+      "BarImpl": 4,
+      "SetErrorBarContext": 4,
+      "BarWithState": 4,
+      "BarBackground": 4,
+      "RenderRectangles": 4,
+      "RectanglesWithAnimation": 4,
+      "BarLabelListProvider": 4,
+      "JavascriptAnimate": 4,
+      "BarRectangles": 4,
+      "BarRectangleNeverActive": 22,
+      "BarRectangle": 22,
+      "Shape": 22,
+      "ShapeSelector": 22,
+      "Rectangle": 22,
+      "LabelListFromLabelProp": 4,
+      "SearchInput": 1,
+      "FilterTabs": 1,
+      "DataTable": 1
+    }
+  }
+}

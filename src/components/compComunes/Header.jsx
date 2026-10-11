@@ -1,56 +1,125 @@
-import React from "react";
-import logo from "../../assets/Logo.png";
-import { LogOut } from "lucide-react";
-
-export const Header = ({ onLogout, user }) => (
-  <header className="w-full bg-white shadow-sm border-b border-gray-200 py-4 px-4">
-
-    {/* Contenedor general */}
-    <div className="flex flex-col items-center relative">
-
-      {/* Botón salir - arriba a la derecha SOLO en pantallas md+ */}
-      {user && (
-        <button
-          onClick={onLogout}
-          className="
-            hidden md:flex 
-            absolute right-6 top-4 
-            items-center space-x-2 
-            bg-blue-500 hover:bg-blue-900 
-            text-white font-semibold px-4 py-2 
-            rounded-md shadow transition
-          "
-        >
-          <LogOut size={18} />
-          <span>Salir</span>
-        </button>
-      )}
-
-      {/* Logo centrado SIEMPRE */}
-      <img
-        src={logo}
-        alt="Sanate - Agua Alcalina Ionizada"
-        className="h-28 object-contain mb-4"
-      />
-
-      {/* Botón salir visible en móvil (abajo, centrado o derecha) */}
-      {user && (
-        <button
-          onClick={onLogout}
-          className="
-            flex md:hidden 
-            self-end
-            items-center space-x-2 
-            bg-blue-500 hover:bg-blue-900 
-            text-white font-semibold px-4 py-2 
-            rounded-md shadow transition
-          "
-        >
-          <LogOut size={18} />
-          <span>Salir</span>
-        </button>
-      )}
-
-    </div>
-  </header>
-);
+import { useEffect, useRef, useState } from "react";
+import { Bell, ChevronDown, LogOut, Search, ArrowUpRight } from "lucide-react";
+import { IconButton } from "../ui/GlassButton";
+export function Header({ user, onLogout, onTabChange }) {
+  const [panel, setPanel] = useState(null);
+  const actionsRef = useRef(null);
+  useEffect(() => {
+    const closeOutside = (event) => {
+      if (!actionsRef.current?.contains(event.target)) {
+        setPanel(null);
+        const search = actionsRef.current?.querySelector("details");
+        if (search) search.open = false;
+      }
+    };
+    const closeOnEscape = (event) => {
+      if (event.key !== "Escape") return;
+      const expanded = actionsRef.current?.querySelector(
+        '[aria-expanded="true"]',
+      );
+      const search = actionsRef.current?.querySelector("details[open]");
+      setPanel(null);
+      if (search) {
+        search.open = false;
+        search.querySelector("summary")?.focus();
+      }
+      expanded?.focus();
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
+  return (
+    <header className="topbar glass">
+      <div className="topbar-greeting">
+        <span className="eyebrow">TU ESPACIO DE TRABAJO</span>
+        <p>
+          Hola, {user.nombre} <span className="greeting-dot" />
+        </p>
+        <small className="muted">Aquí tienes el estado de tu inventario.</small>
+      </div>
+      <div className="topbar-actions" ref={actionsRef}>
+        <details className="quick-search">
+          <summary aria-label="Buscar sección">
+            <Search size={17} />
+            <span>Buscar sección…</span>
+            <kbd>↵</kbd>
+          </summary>
+          <div className="dropdown glass">
+            {[
+              "Dashboard",
+              "Materia Prima",
+              "Producto Terminado",
+              "Reportes",
+            ].map((tab) => (
+              <button
+                type="button"
+                key={tab}
+                onClick={(e) => {
+                  onTabChange(tab);
+                  e.currentTarget.closest("details").open = false;
+                }}
+              >
+                {tab}
+                <ArrowUpRight size={15} />
+              </button>
+            ))}
+          </div>
+        </details>
+        <div className="topbar-popover">
+          <IconButton
+            label="Notificaciones"
+            aria-expanded={panel === "notifications"}
+            onClick={() =>
+              setPanel(panel === "notifications" ? null : "notifications")
+            }
+          >
+            <Bell size={19} />
+          </IconButton>
+          {panel === "notifications" && (
+            <div className="dropdown glass">
+              <strong>Notificaciones</strong>
+              <p className="muted">
+                Consulta las alertas de stock en tu Dashboard.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  onTabChange("Dashboard");
+                  setPanel(null);
+                }}
+              >
+                Ver estado del inventario <ArrowUpRight size={16} />
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="topbar-popover">
+          <button
+            type="button"
+            className="profile-button"
+            aria-label="Menú de usuario"
+            aria-expanded={panel === "user"}
+            onClick={() => setPanel(panel === "user" ? null : "user")}
+          >
+            <span className="avatar">A</span>
+            <ChevronDown size={15} />
+          </button>
+          {panel === "user" && (
+            <div className="dropdown glass">
+              <strong>{user.nombre}</strong>
+              <p className="muted break-word">{user.email}</p>
+              <button type="button" onClick={onLogout}>
+                <LogOut size={16} />
+                Cerrar sesión
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}

@@ -1,179 +1,187 @@
-import React, { useEffect, useState } from "react";
-import {
-  collection,
-  getDocs,
-  doc,
-  updateDoc,
-  addDoc,
-  serverTimestamp,
-} from "firebase/firestore";
-import { db } from "../../utils/firebase";
-
-export const MateriaPrima = ({ onCancel, onSaved }) => {
-  const [insumos, setInsumos] = useState([]);
-  const [selectedId, setSelectedId] = useState("");
-  const [cantidad, setCantidad] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [mensaje, setMensaje] = useState("");
-
-  useEffect(() => {
-    const fetchInsumos = async () => {
-      try {
-        const snap = await getDocs(collection(db, "insumos")); // colección de tus insumos
-        const data = snap.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-        }));
-        setInsumos(data);
-      } catch (err) {
-        console.error("Error obteniendo insumos:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInsumos();
-  }, []);
-
-  const selectedInsumo = insumos.find((i) => i.id === selectedId);
-
-  const handleSubmit = async (e) => {
+import { useState } from "react";
+import { inventoryService } from "../../services/inventoryService";
+import { GlassButton } from "../ui/GlassButton";
+import { ErrorState } from "../ui/EmptyState";
+export function MateriaPrima({
+  materia,
+  mode = "record",
+  rawMaterials = [],
+  onSaved,
+  onCancel,
+}) {
+  const [form, setForm] = useState(() => ({
+    ...{
+      nombre: "",
+      categoria: "Ingredientes",
+      stock_actual: "",
+      stock_minimo: "",
+      costo_unidad: "",
+      unidad_medida: "kg",
+      proveedor: "",
+      consumo_promedio: 0,
+      merma_mensual: 0,
+    },
+    ...materia,
+  }));
+  const [selected, setSelected] = useState(""),
+    [quantity, setQuantity] = useState(""),
+    [saving, setSaving] = useState(false),
+    [error, setError] = useState("");
+  const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const submit = async (e) => {
     e.preventDefault();
-    setMensaje("");
-
-    if (!selectedId) {
-      setMensaje("Selecciona un insumo.");
-      return;
-    }
-    if (!cantidad || parseFloat(cantidad) <= 0) {
-      setMensaje("Ingresa una cantidad válida.");
-      return;
-    }
-
+    setSaving(true);
+    setError("");
     try {
-      setSaving(true);
-
-      const cantidadNum = parseFloat(cantidad);
-      const stockActual = Number(selectedInsumo.stock_actual || 0);
-
-      // 1) Actualizar stock del insumo
-      await updateDoc(doc(db, "insumos", selectedId), {
-        stock_actual: stockActual + cantidadNum,
-      });
-
-      // 2) Guardar historial en colección "entradasMateriaPrima"
-      await addDoc(collection(db, "entradasMateriaPrima"), {
-        insumoId: selectedId,
-        nombre: selectedInsumo.nombre,
-        cantidad: cantidadNum,
-        stockMin: selectedInsumo.stock_minimo,
-        costo: selectedInsumo.costo_unidad,
-        unidadMedida: selectedInsumo.unidad_medida,
-        proveedor: selectedInsumo.proveedor || "",
-        fecha: serverTimestamp(),
-      });
-
-      // Actualizar UI del stock en memoria
-      setInsumos((prev) =>
-        prev.map((i) =>
-          i.id === selectedId
-            ? { ...i, stock_actual: stockActual + cantidadNum }
-            : i
-        )
-      );
-
-      setMensaje("Entrada registrada correctamente ✅");
-      setCantidad("");
-
-      // Avisar al padre para que refresque la tabla de historial
-      if (onSaved) onSaved();
+      if (mode === "entry")
+        await inventoryService.registerRawMaterialEntry(selected, quantity);
+      else if (materia)
+        await inventoryService.updateRawMaterial(materia.id, form);
+      else await inventoryService.createRawMaterial(form);
+      onSaved?.();
     } catch (err) {
-      console.error("Error guardando entrada:", err);
-      setMensaje("Ocurrió un error al guardar.");
+      setError(err.message);
     } finally {
       setSaving(false);
     }
   };
-
-  if (loading) return <p className="p-4">Cargando insumos...</p>;
-
+  const item = rawMaterials.find((i) => i.id === selected);
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4">
-      <h2 className="text-xl font-bold mb-2">Registrar entrada</h2>
-
-      {/* Select de insumos */}
-      <div>
-        <label className="block text-sm mb-1">Insumo</label>
-        <select
-          value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
-          className="w-full px-3 py-2 border rounded-lg"
-        >
-          <option value="">Selecciona un insumo</option>
-          {insumos.map((ins) => (
-            <option key={ins.id} value={ins.id}>
-              {ins.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Info del insumo */}
-      {selectedInsumo && (
-        <div className="p-3 bg-gray-100 border rounded-lg text-sm space-y-1">
-          <p>
-            <strong>Stock actual:</strong> {selectedInsumo.stock_actual}{" "}
-            {selectedInsumo.unidad_medida}
-          </p>
-          <p>
-            <strong>Stock mínimo:</strong> {selectedInsumo.stock_minimo}
-          </p>
-          <p>
-            <strong>Costo unidad:</strong> ${selectedInsumo.costo_unidad}
-          </p>
-          {selectedInsumo.proveedor && (
-            <p>
-              <strong>Proveedor:</strong> {selectedInsumo.proveedor}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Cantidad a agregar */}
-      <div>
-        <label className="block text-sm mb-1">Cantidad a agregar</label>
-        <input
-          type="number"
-          step="0.01"
-          value={cantidad}
-          onChange={(e) => setCantidad(e.target.value)}
-          className="w-full px-3 py-2 border rounded-lg"
-        />
-      </div>
-
-      {mensaje && <p className="text-sm">{mensaje}</p>}
-
-      <div className="flex gap-2">
-        {/* Botón principal con el diseño del logout */}
-        <button
-          type="submit"
-          disabled={saving}
-          className="flex-1 flex items-center justify-center space-x-2 bg-blue-500 hover:bg-blue-900 text-white font-semibold px-4 py-2 rounded-md shadow transition duration-150 disabled:opacity-60"
-        >
-          <span>{saving ? "Guardando..." : "Registrar"}</span>
-        </button>
-
-        {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 bg-gray-300 py-2 rounded-lg hover:bg-gray-400 transition"
-          >
-            Cancelar
-          </button>
+    <form className="inventory-form space-y-4" onSubmit={submit}>
+      <fieldset disabled={saving} className="form-fields">
+        {mode === "entry" ? (
+          <>
+            <div>
+              <label htmlFor="entry-material">Insumo</label>
+              <select
+                id="entry-material"
+                required
+                value={selected}
+                onChange={(e) => setSelected(e.target.value)}
+              >
+                <option value="">Selecciona un insumo</option>
+                {rawMaterials.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {item && (
+              <p className="form-info">
+                Stock actual: {item.stock_actual} {item.unidad_medida} · Mínimo:{" "}
+                {item.stock_minimo}
+              </p>
+            )}
+            <div>
+              <label htmlFor="entry-quantity">Cantidad a agregar</label>
+              <input
+                id="entry-quantity"
+                type="number"
+                required
+                min="0.0001"
+                step="any"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <label htmlFor="raw-name">Nombre del insumo</label>
+              <input
+                id="raw-name"
+                name="nombre"
+                value={form.nombre}
+                onChange={change}
+                required
+                maxLength={120}
+                placeholder="Ej. Glicerina vegetal"
+              />
+            </div>
+            <div className="form-grid">
+              <div>
+                <label htmlFor="raw-category">Categoría</label>
+                <input
+                  id="raw-category"
+                  name="categoria"
+                  value={form.categoria}
+                  onChange={change}
+                  required
+                  list="raw-categories"
+                />
+                <datalist id="raw-categories">
+                  <option>Ingredientes</option>
+                  <option>Empaque</option>
+                  <option>Fragancias</option>
+                </datalist>
+              </div>
+              <div>
+                <label htmlFor="raw-unit">Unidad de medida</label>
+                <select
+                  id="raw-unit"
+                  name="unidad_medida"
+                  value={form.unidad_medida}
+                  onChange={change}
+                >
+                  {["kg", "L", "g", "ml", "pzas", "cajas"].map((u) => (
+                    <option key={u}>{u}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="form-grid">
+              {[
+                ["stock_actual", "Stock actual"],
+                ["stock_minimo", "Stock mínimo"],
+                ["costo_unidad", "Costo por unidad (MXN)"],
+                ["consumo_promedio", "Consumo promedio diario"],
+              ].map(([name, label]) => (
+                <div key={name}>
+                  <label htmlFor={`raw-${name}`}>{label}</label>
+                  <input
+                    id={`raw-${name}`}
+                    name={name}
+                    type="number"
+                    min="0"
+                    step="any"
+                    required
+                    value={form[name]}
+                    onChange={change}
+                  />
+                </div>
+              ))}
+            </div>
+            <div>
+              <label htmlFor="raw-provider">Proveedor</label>
+              <input
+                id="raw-provider"
+                name="proveedor"
+                value={form.proveedor}
+                onChange={change}
+                maxLength={120}
+                placeholder="Opcional"
+              />
+            </div>
+          </>
         )}
+      </fieldset>
+      {error && <ErrorState message={error} />}
+      <div className="form-actions">
+        <GlassButton variant="secondary" onClick={onCancel} disabled={saving}>
+          Cancelar
+        </GlassButton>
+        <GlassButton type="submit" disabled={saving}>
+          {saving
+            ? "Guardando…"
+            : mode === "entry"
+              ? "Registrar entrada"
+              : materia
+                ? "Guardar cambios"
+                : "Crear materia prima"}
+        </GlassButton>
       </div>
     </form>
   );
-};
+}

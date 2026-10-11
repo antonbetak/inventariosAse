@@ -1,9 +1,17 @@
-import React, { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../utils/firebase";   // 👈 IMPORTANTE
-import logo from "../../assets/Logo.png";
-import logo1 from "../../assets/BackgroundLogin.png";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Eye,
+  EyeOff,
+  Droplets,
+  Boxes,
+  ChartNoAxesCombined,
+  ArrowUpRight,
+  LockKeyhole,
+  Mail,
+  ShieldCheck,
+} from "lucide-react";
+import { authService } from "../../services/authService";
+import { Brand } from "../ui/Brand";
 
 export const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
@@ -11,6 +19,25 @@ export const Login = ({ onLogin }) => {
     password: "",
   });
 
+  const artRef = useRef(null);
+  useEffect(() => {
+    const art = artRef.current;
+    if (!art) return;
+    let visible = true;
+    const sync = () =>
+      art.classList.toggle("is-motion-paused", !visible || document.hidden);
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      sync();
+    });
+    observer.observe(art);
+    document.addEventListener("visibilitychange", sync);
+    sync();
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
@@ -21,118 +48,158 @@ export const Login = ({ onLogin }) => {
     setCargando(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
+      const session = await authService.login(
         formData.email,
-        formData.password
+        formData.password,
       );
-
-      onLogin({
-        uid: userCredential.user.uid,
-        email: userCredential.user.email,
-        nombre: "Administrador",
-      });
-
+      onLogin(session);
       setCargando(false);
     } catch (err) {
       console.error("Error de login:", err);
-      setError("Correo o contraseña incorrectos");
+      setError(err.message);
       setCargando(false);
     }
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center flex items-center justify-center px-4"
-      style={{
-        backgroundImage: `url(${logo1})`,
-      }}
-    >
-      <div className="max-w-md w-full">
-        <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-8 border border-gray-100">
-
-          <div className="text-center mb-6">
-            <img src={logo} alt="Sanate" className="h-28 w-auto mx-auto mb-4" />
-            <p className="text-gray-600 text-sm">
-              Ingresa para gestionar tu inventario Sanaté
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Correo Electrónico
-              </label>
-              <input
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                placeholder="eduardo@sanate.com"
-              />
+    <div className="login-page">
+      <section className="login-branding">
+        <Brand href="#login-form" />
+        <div className="login-story">
+          <span className="login-pill">
+            <span className="status-dot" /> AGUA. CLARIDAD. EQUILIBRIO.
+          </span>
+          <h1>
+            Pureza y control
+            <br />
+            en cada <em>operación.</em>
+          </h1>
+          <p>
+            Del primer insumo a la última entrega.
+            <br />
+            Gestiona cada recurso con la claridad del agua.
+          </p>
+          <div className="login-art" ref={artRef} aria-hidden="true">
+            <div className="art-orbit orbit-one" />
+            <div className="art-orbit orbit-two" />
+            <div className="water-ripple ripple-one" />
+            <div className="water-ripple ripple-two" />
+            <div className="art-core">
+              <Droplets size={76} strokeWidth={1} />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Contraseña
-              </label>
-              <div className="relative">
+            <div className="art-label label-top">
+              <Boxes size={19} />
+              <span>
+                Cada recurso cuenta<small>Inventario en equilibrio</small>
+              </span>
+            </div>
+            <div className="art-label label-bottom">
+              <ChartNoAxesCombined size={20} />
+              <span>
+                Un flujo más claro
+                <small>Recursos · Producción · Distribución</small>
+              </span>
+              <ArrowUpRight size={17} />
+            </div>
+          </div>
+        </div>
+        <div className="login-brand-footer">
+          <span>Sanaté Inventarios / 2.0</span>
+          <span>Operación limpia. Decisiones claras.</span>
+        </div>
+      </section>
+      <section className="login-form-side">
+        <div className="login-mobile-brand">
+          <Brand href="#login-form" />
+        </div>
+        <div className="login-card glass-card">
+          <span className="icon-capsule">
+            <LockKeyhole size={22} />
+          </span>
+          <p className="eyebrow">SANATÉ INVENTARIOS</p>
+          <h2>Bienvenido a Sanaté</h2>
+          <p className="muted">
+            Tu operación fluye mejor cuando todo está claro.
+          </p>
+          <form id="login-form" onSubmit={handleSubmit}>
+            <div className="field">
+              <label htmlFor="login-email">Correo o usuario</label>
+              <div className="input-with-icon">
+                <Mail size={18} />
                 <input
+                  id="login-email"
+                  type="text"
+                  required
+                  autoComplete="username"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  placeholder="admin@sanate.mx o admin"
+                  disabled={cargando}
+                />
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="login-password">Contraseña</label>
+              <div className="input-with-icon">
+                <LockKeyhole size={18} />
+                <input
+                  id="login-password"
                   type={showPassword ? "text" : "password"}
                   required
+                  autoComplete="current-password"
                   value={formData.password}
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition pr-12"
-                  placeholder="••••••••"
+                  placeholder="Tu contraseña"
+                  disabled={cargando}
                 />
                 <button
                   type="button"
+                  aria-label={
+                    showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                  }
+                  aria-pressed={showPassword}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
                 </button>
               </div>
             </div>
-
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div role="alert" className="error-message">
                 {error}
               </div>
             )}
-
             <button
               type="submit"
               disabled={cargando}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="button button-primary login-submit"
             >
               {cargando ? (
                 <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Ingresando...
+                  <span className="spinner" />
+                  Ingresando…
                 </>
               ) : (
-                <>Iniciar Sesión</>
+                <>
+                  Iniciar sesión
+                  <ArrowUpRight size={18} />
+                </>
               )}
             </button>
           </form>
-
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              <strong>Credenciales de prueba:</strong><br />
-              Email: eduardo@sanate.com<br />
-              Contraseña: edu123
-            </p>
+          <div className="login-secure">
+            <ShieldCheck size={15} />
+            Cada recurso, cada movimiento, bajo control.
           </div>
-
         </div>
-      </div>
+        <p className="login-copyright">
+          Sanaté Inventarios · Tu operación, en equilibrio.
+        </p>
+      </section>
     </div>
   );
 };
