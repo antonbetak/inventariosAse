@@ -98,6 +98,11 @@ export const Dashboard = memo(function Dashboard({
           tone="amber"
         />
       </div>
+      <div className="stats-grid three">
+        <StatCard icon={Wallet} title="Ventas registradas" value={money(reports.salesTotal??0)} detail="Histórico del Excel + operaciones" />
+        <StatCard icon={PackageCheck} title="Unidades vendidas" value={reports.salesUnits??0} detail="Ventas registradas, sin proyecciones" />
+        <StatCard icon={TriangleAlert} title="Merma proyectada de agua" value={money(reports.projectedLossCost??0)} detail="Planeación julio–diciembre; no es gasto real" />
+      </div>
       <DashboardCharts
         history={reports.history}
         healthy={healthy}

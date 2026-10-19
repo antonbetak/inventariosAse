@@ -39,3 +39,9 @@ temp/
 *.tmp
 *.pem
 *.key
+
+# Private source workbooks and import output
+private/
+*.xlsx
+*.xls
+*.sqlite

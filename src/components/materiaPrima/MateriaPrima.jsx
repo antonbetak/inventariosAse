@@ -112,9 +112,9 @@ export function MateriaPrima({
                   list="raw-categories"
                 />
                 <datalist id="raw-categories">
-                  <option>Ingredientes</option>
+                  <option>Insumos</option>
                   <option>Empaque</option>
-                  <option>Fragancias</option>
+                  <option>Limpieza</option>
                 </datalist>
               </div>
               <div>
@@ -125,7 +125,7 @@ export function MateriaPrima({
                   value={form.unidad_medida}
                   onChange={change}
                 >
-                  {["kg", "L", "g", "ml", "pzas", "cajas"].map((u) => (
+                  {["s/d", "kg", "L", "g", "ml", "pzas", "cajas"].map((u) => (
                     <option key={u}>{u}</option>
                   ))}
                 </select>

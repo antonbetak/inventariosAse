@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "tailwindcss" source(".");
 
 :root {
   font-family:
@@ -2151,7 +2151,7 @@ option {
     flex-direction: column;
     align-items: center;
     gap: 6px;
-    width: 25%;
+    width: 20%;
     border: 1px solid transparent;
     background: transparent;
     color: #8993a4;

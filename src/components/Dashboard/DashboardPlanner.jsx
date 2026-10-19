@@ -12,7 +12,7 @@ import { GlassCard } from "../ui/GlassCard";
 import { SectionHeader } from "../ui/PageHeader";
 import { dashboardService } from "../../services/dashboardService";
 import { STORAGE_KEYS } from "../../services/storage";
-import { dateKey } from "../../data/mockDashboard";
+const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
 
 export const DashboardPlanner = memo(function DashboardPlanner() {
   const [today] = useState(() => new Date());

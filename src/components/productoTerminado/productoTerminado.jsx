@@ -12,7 +12,7 @@ export function ProductoTerminado({
   const [form, setForm] = useState(() => ({
     ...{
       nombre: "",
-      categoria: "Higiene",
+      categoria: "Agua purificada",
       cantidad: "",
       stock_minimo: 0,
       precioVenta: "",
@@ -92,11 +92,11 @@ export function ProductoTerminado({
             id="product-name"
             name="nombre"
             required
-            maxLength={120}
+            maxLength={50}
             value={form.nombre}
             onChange={change}
             list="product-examples"
-            placeholder="Ej. Gel antibacterial 500 ml"
+            placeholder="Ej. Garrafón 20L"
           />
           <datalist id="product-examples">
             {inventoryService.recipeNames.map((name) => (

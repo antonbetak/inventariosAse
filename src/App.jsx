@@ -20,7 +20,8 @@ const loadReports = () => import("./components/Reportes/Reportes");
 const Reportes = lazy(() =>
   loadReports().then((module) => ({ default: module.Reportes })),
 );
-const tabs = ["Dashboard", "Materia Prima", "Producto Terminado", "Reportes"];
+import { Operations } from "./components/Operations";
+const tabs = ["Dashboard", "Materia Prima", "Producto Terminado", "Operaciones", "Reportes"];
 function App() {
   const [user, setUser] = useState(null),
     [checking, setChecking] = useState(true);
@@ -45,6 +46,7 @@ function App() {
       .then((session) => {
         if (active) setUser(session);
       })
+      .catch(() => { if (active) setUser(null); })
       .finally(() => {
         if (active) setChecking(false);
       });
@@ -127,6 +129,7 @@ function App() {
       activeTab={activeTab}
       onTabChange={setActiveTab}
     >
+      {data?.rawMaterials.some(i=>i.costo_pendiente) && <div className="form-info" role="status">Valuación parcial: faltan costos y unidades de insumos en el archivo de origen. Edita los registros para completarlos.</div>}
       <Suspense fallback={<LoadingState />}>
         <div className="page-view" key={activeTab}>
           {loading ? (
@@ -166,6 +169,7 @@ function App() {
                   onDelete={(item) => requestDelete("product", item)}
                 />
               )}
+              {activeTab === "Operaciones" && <Operations snapshot={data} onSaved={refresh} />}
               {activeTab === "Reportes" && (
                 <Reportes reports={reports} snapshot={data} />
               )}

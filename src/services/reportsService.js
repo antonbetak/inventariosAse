@@ -3,7 +3,7 @@ export const reportsService = {
   async getSummary(snapshot) {
     const data = snapshot ?? (await inventoryService.getSnapshot());
     const insumos = data.rawMaterials.map((i) => {
-      const punto_reorden = Math.ceil(i.consumo_promedio * 2 + i.stock_minimo);
+      const punto_reorden = Number(i.punto_reorden ?? Math.ceil(i.consumo_promedio * 2 + i.stock_minimo));
       return {
         ...i,
         punto_reorden,
@@ -18,7 +18,7 @@ export const reportsService = {
         (s, p) => s + p.cantidad * p.precioVenta,
         0,
       );
-    const entradas = data.movements.filter((m) => m.tipo === "entrada");
+    const entradas = data.movements.filter((m) => m.tipo === "salida");
     const datosGrafica = [...insumos]
       .filter((i) => i.punto_reorden > 0)
       .sort(
@@ -37,6 +37,9 @@ export const reportsService = {
         m.valor;
     }
     return {
+      salesTotal: (data.sales??[]).reduce((sum,s)=>sum+Number(s.ingreso),0),
+      salesUnits: (data.sales??[]).reduce((sum,s)=>sum+Number(s.unidades),0),
+      projectedLossCost: (data.projections??[]).reduce((sum,p)=>sum+Number(p.costo_merma),0),
       insumos,
       rawValue,
       productValue,
