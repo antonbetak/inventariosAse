@@ -123,19 +123,19 @@ export const Login = ({ onLogin }) => {
           </p>
           <form id="login-form" onSubmit={handleSubmit}>
             <div className="field">
-              <label htmlFor="login-email">Correo o usuario</label>
+              <label htmlFor="login-email">Correo electrónico</label>
               <div className="input-with-icon">
                 <Mail size={18} />
                 <input
                   id="login-email"
-                  type="text"
+                  type="email"
                   required
                   autoComplete="username"
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  placeholder="admin@sanate.mx o admin"
+                  placeholder="Tu correo registrado"
                   disabled={cargando}
                 />
               </div>
