@@ -9,7 +9,7 @@ export function Operations({snapshot,onSaved}) {
    if(mode==='venta')await inventoryService.registerSale(product,{unidades:quantity});
    else await inventoryService.registerProduction(product,{quantity,insumos:Object.entries(used).filter(([,q])=>q!==''&&Number(q)>0).map(([id,q])=>({id,cantidadUsada:q}))});
    setQuantity('');setUsed({});setMessage('Operación guardada.');onSaved();
- }catch(e){setMessage(e.message);}finally{setBusy(false);}};
+ }catch(e){setMessage(e.message);onSaved();}finally{setBusy(false);}};
  return <div className="space-y-4"><PageHeader title="Ventas y producción" description="Registra operaciones y consulta el histórico importado."/>
  <GlassCard><form className="inventory-form space-y-4" onSubmit={submit}><fieldset disabled={busy} className="form-fields">
  <label>Operación<select value={mode} onChange={e=>setMode(e.target.value)}><option value="venta">Venta</option><option value="produccion">Producción</option></select></label>
