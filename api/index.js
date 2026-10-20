@@ -1,3 +1,4 @@
+import {saveCommercialData} from '../server/commercial-data.js';
 import {randomBytes,randomUUID} from 'node:crypto';
 import {database} from '../server/db.js';
 import {hashToken,verifyPassword,checkOrigin,fail,required} from '../server/security.js';
@@ -34,6 +35,7 @@ export default async function handler(req,res){
     if(path[0]==='session'&&method==='GET')return send(200,u??null);
     if(!u)fail('Inicia sesión para continuar.',401);
     if(path[0]==='session'&&method==='DELETE'){await db.query('DELETE FROM app_session WHERE token_hash=$1',[hashToken(tokenOf(req))]);res.setHeader('Set-Cookie',cookie('',0));return send(200,{ok:true});}
+    if(path.length===1&&path[0]==='commercial-data'&&method==='POST')return send(200,await saveCommercialData(body,u));
     if(path[0]==='inventory'&&method==='GET')return send(200,await snapshot());
     if(path[0]==='recipe'&&method==='POST')return send(200,await recipe(body.name,body.quantity));
     if(['raw-materials','finished-products'].includes(path[0])){

@@ -89,4 +89,30 @@ La sesión persistió después de recargar y en otra pestaña. La conciliación 
 
 Una respuesta 401 de una API protegida elimina el usuario y los datos en memoria y devuelve al login. Un intento de login incorrecto no dispara esa transición. Se añadió una prueba automatizada del evento y su limpieza. El formulario limita sus columnas y controles al ancho disponible para que nombres largos de productos no ensanchen la pantalla móvil; la validación visual final de este ajuste requiere una sesión activa.
 
-Los registros PRUEBA_PREVIEW permanecen en development y sus operaciones se incluyen en los agregados de esta base de prueba. No se deben interpretar esos agregados como cifras comerciales conciliadas. Las filas históricas originales se conservaron.
+La inclusión de pruebas en agregados descrita en la validación inicial queda corregida por la migración 003 y los filtros comerciales documentados abajo. Las filas históricas originales se conservaron.
+
+
+## Conciliación y ámbito comercial (20 de octubre de 2026)
+
+La migración `003_commercial_scope.sql` fue revisada y aplicada únicamente con las guardas de rama development y host de `.env.local`. No se ejecuta durante el build. Añade clasificación persistente `es_prueba` a catálogos, ventas, producción y movimientos; clasifica los registros existentes por su identificación inicial y sus relaciones. Renombrar no modifica la clasificación. Las nuevas altas permiten elegir prueba explícitamente; no se permite mezclar insumos y productos de ámbitos distintos. No se borran movimientos, operaciones, importaciones ni históricos.
+
+Dashboard, reportes, actividad y exportaciones de inventario excluyen pruebas por defecto. El detalle de ingresos de Reportes y Operaciones permite incluir pruebas explícitamente para validación, filtrar meses y origen y exportar exactamente la selección. Ingresos históricos y de operaciones tienen subtotales separados; una coincidencia de producto y mes se marca para conciliación y no genera un total combinado. Las proyecciones no entran en ventas. Los meses de operaciones se determinan en America/Mexico_City.
+
+La valuación al costo de insumos es parcial y excluye costos pendientes; los productos confirmados se muestran a precio de venta con costo contable pendiente. La gráfica histórica usa únicamente costo validado de insumos comerciales. Los valores anteriores que mezclaban pruebas se conservan en SQL, pero quedan fuera de la gráfica; no se inventa una reconstrucción. La utilidad se muestra pendiente con los datos necesarios. Las muestras de merma sin fecha no se etiquetan como pérdidas mensuales reales.
+
+Los costos vacíos se conservan NULL y se exportan como pendientes; cero explícito puede ser un costo validado. Una edición con cantidad vacía de un producto pendiente conserva su estado sin generar un movimiento de conteo. Para confirmarlo se exige una cantidad explícita. Operaciones incluye formularios de receta validada por unidad y fecha real de cada muestra; el servidor exige administrador, unidades válidas, ámbito consistente, cantidades positivas, insumos sin duplicados y fechas reales. Las celdas originales de Excel se conservan separadas.
+
+### Auditoría reproducible y privacidad
+
+`scripts/audit-sales.py` lee únicamente Hoja3, reevalúa las fórmulas aritméticas y SUM de las 18 filas producto/mes, verifica seis subtotales y el total semestral con Decimal, y escribe el detalle solamente en una ruta privada. Se comprobó que las dos copias privadas del Excel son idénticas. Una consulta de solo lectura comparó cada fila contra SQL, comprobó unicidad de producto/año/mes, ingresos = unidades × precio y el conteo de celdas fuente. Los resultados monetarios, fórmulas con precios y desglose por producto/mes se conservan en `private/sales-audit.json`, `private/sales-audit.md` y `private/sql-sales-audit.json`, excluidos de Git. No se repitieron la importación ni las migraciones 001/002.
+
+### Pruebas realizadas y límites
+
+- `npm test`: 15/15, incluidos periodos, origen, solapamiento, exclusión de pruebas renombradas, costos desconocidos, exportación, sesión y recuperación de módulos.
+- `node scripts/qa-development.js`: 9/9 contra PostgreSQL development: costo NULL, producción con consumo, rollback sin movimientos parciales, dos ventas concurrentes sin sobreventa, receta persistida, fecha imposible, edición sin conteo, exclusión de agregados y clasificación tras renombrar. Las fixtures quedan clasificadas como pruebas; no se borran.
+- `node scripts/qa-http-development.js`: 11/11: CRUD y entradas con rewrite __route, agenda persistente, restricción de administrador, login con usuario temporal independiente, credenciales erróneas, Origin, cookies, consulta SQL, sesiones independientes, logout y caducidad; el usuario temporal se desactiva al finalizar y no se consulta ni modifica la contraseña del administrador.
+- Lint y build correctos. La configuración de rutas anidadas y recuperación de módulos permanece vigente.
+
+La validación visual móvil/escritorio y React → API → SQL desde la Preview protegida sigue pendiente: el servicio de control del navegador no inició y la credencial local de Vercel devolvió 403. Estos controles no se sustituyen por el build ni por las pruebas HTTP locales. No se han debilitado las protecciones de Vercel.
+
+Pendientes comerciales: conteos físicos de productos importados, costos/unidades validados, recetas reales y fechas de muestras. Existen formularios para capturarlos; las pruebas sintéticas no completan esos datos comerciales. Producción, Neon production y el proyecto Vercel inventarios-ase permanecen intactos.

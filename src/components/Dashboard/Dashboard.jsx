@@ -32,7 +32,8 @@ export const Dashboard = memo(function Dashboard({
   onNavigate,
   onAdd,
 }) {
-  const products = productoTerminado;
+  const products = productoTerminado.filter(p=>!p.es_prueba);
+  materiaPrima = materiaPrima.filter(i=>!i.es_prueba);
   const { rawValue, productValue } = reports;
   const alerts = materiaPrima.filter(
     (m) => Number(m.stock_actual ?? 0) <= Number(m.stock_minimo ?? 0),
@@ -72,9 +73,9 @@ export const Dashboard = memo(function Dashboard({
       <div className="stats-grid">
         <StatCard
           icon={Wallet}
-          title="Valor total inventario"
-          value={money(rawValue + productValue)}
-          detail="Insumos + productos registrados"
+          title="Insumos al costo validado"
+          value={money(rawValue)}
+          detail="Valuación parcial: faltan costos de insumos"
         />
         <StatCard
           icon={Boxes}
@@ -85,9 +86,9 @@ export const Dashboard = memo(function Dashboard({
         />
         <StatCard
           icon={PackageCheck}
-          title="Producto terminado"
+          title="Productos a precio de venta"
           value={money(productValue)}
-          detail={`${products.length} registros de producto`}
+          detail={`${products.length} productos; costo contable pendiente`}
           tone="violet"
         />
         <StatCard
@@ -99,10 +100,11 @@ export const Dashboard = memo(function Dashboard({
         />
       </div>
       <div className="stats-grid three">
-        <StatCard icon={Wallet} title="Ventas registradas" value={money(reports.salesTotal??0)} detail="Histórico del Excel + operaciones" />
-        <StatCard icon={PackageCheck} title="Unidades vendidas" value={reports.salesUnits??0} detail="Ventas registradas, sin proyecciones" />
+        <StatCard icon={Wallet} title="Ingresos históricos · Excel" value={money(reports.sales.historicalTotal)} detail={reports.sales.historicalPeriod} />
+        <StatCard icon={PackageCheck} title="Ingresos de operaciones" value={money(reports.sales.operationalTotal)} detail={`${reports.sales.operationalPeriod}; pruebas excluidas`} />
         <StatCard icon={TriangleAlert} title="Merma proyectada de agua" value={money(reports.projectedLossCost??0)} detail="Planeación julio–diciembre; no es gasto real" />
       </div>
+      <p className="form-info">Utilidad pendiente de calcular: faltan costos validados, recetas reales y costos de producción. Consulta periodos y orígenes en Reportes.</p>
       <DashboardCharts
         history={reports.history}
         healthy={healthy}

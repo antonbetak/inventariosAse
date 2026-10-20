@@ -13,11 +13,13 @@ import { EmptyState } from "../ui/EmptyState";
 import { money, dateLabel, stockStatus, sortProducts } from "../../utils/inventoryDisplay";
 
 export const TablaProductoTerminado = ({
-  salidas = [],
+  salidas: allSalidas = [],
   onAdd,
   onEdit,
   onDelete,
 }) => {
+  const [includeTests,setIncludeTests] = useState(false);
+  const salidas = allSalidas.filter(p=>includeTests||!p.es_prueba);
   const [filter, setFilter] = useState("Todos");
   const [search, setSearch] = useState("");
   const filtered = sortProducts(salidas)
@@ -45,12 +47,12 @@ export const TablaProductoTerminado = ({
           icon={PackageCheck}
           title="Productos registrados"
           value={salidas.length}
-          detail="Catálogo de productos"
+          detail={includeTests ? "Incluye pruebas; costo contable pendiente" : "Pruebas excluidas; costo contable pendiente"}
           tone="teal"
         />
         <StatCard
           icon={Wallet}
-          title="Valor de productos registrados"
+          title="Valor a precio de venta"
           value={money(
             salidas.reduce(
               (sum, p) =>
@@ -62,6 +64,7 @@ export const TablaProductoTerminado = ({
         />
       </div>
       {salidas.some(p => p.stock_pendiente) && <p className="form-info" role="status">El Excel contiene ventas históricas y producción proyectada, pero no un conteo físico actual de producto terminado. Confirma las existencias en Editar antes de registrar ventas o producción.</p>}
+      <label><input type="checkbox" checked={includeTests} onChange={e=>setIncludeTests(e.target.checked)}/> Incluir registros de prueba</label>
       <GlassCard className="table-panel">
         <div className="table-toolbar">
           <SearchInput

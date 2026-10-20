@@ -41,9 +41,9 @@ export const DashboardCharts = memo(function DashboardCharts({
       <GlassCard className="value-chart">
         <SectionHeader
           title="Evolución del inventario"
-          description="Valor total del inventario · MXN"
+          description="Insumos al costo validado · MXN; valuación parcial"
         >
-          <span className="subtle-badge">VALOR TOTAL</span>
+          <span className="subtle-badge">COSTO PARCIAL</span>
         </SectionHeader>
         <FilterTabs
           options={["7 días", "30 días", "90 días"]}
@@ -121,7 +121,7 @@ export const DashboardCharts = memo(function DashboardCharts({
                 />
                 <Area
                   type="monotone"
-                  dataKey="total"
+                  dataKey="materiaPrima"
                   stroke="var(--accent-primary)"
                   strokeWidth={2.5}
                   fill="url(#inventoryArea)"
@@ -138,8 +138,8 @@ export const DashboardCharts = memo(function DashboardCharts({
         )}
         <div className="chart-footnote">
           <span className="legend-dot blue" />
-          Valor total
-          <span className="muted">Insumos y productos</span>
+          Costo validado
+          <span className="muted">Insumos comerciales</span>
         </div>
       </GlassCard>
       <GlassCard className="stock-panel">

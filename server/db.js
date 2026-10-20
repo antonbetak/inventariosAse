@@ -12,7 +12,7 @@ export async function transaction(fn) {
   finally {c.release();}
 }
 export async function captureHistory(c) {
-  await c.query(`INSERT INTO historial_valor(fecha,materia_prima,producto_terminado)
-    SELECT current_date,coalesce((SELECT sum(p.inventario_actual*i.precio_presentacion/i.cantidad_presentacion) FROM insumo i JOIN parametro_inventario p ON p.insumo_id=i.id WHERE i.activo),0),coalesce((SELECT sum(cantidad*precio_venta) FROM producto WHERE activo),0)
-    ON CONFLICT(fecha) DO UPDATE SET materia_prima=excluded.materia_prima,producto_terminado=excluded.producto_terminado`);
+  await c.query(`INSERT INTO historial_valor(fecha,materia_prima,producto_terminado,alcance_comercial)
+    SELECT current_date,coalesce((SELECT sum(p.inventario_actual*i.precio_presentacion/i.cantidad_presentacion) FROM insumo i JOIN parametro_inventario p ON p.insumo_id=i.id WHERE i.activo AND NOT i.es_prueba AND NOT i.costo_pendiente),0),coalesce((SELECT sum(cantidad*precio_venta) FROM producto p WHERE activo AND NOT es_prueba AND (NOT EXISTS(SELECT 1 FROM venta_mensual v WHERE v.producto_id=p.id) OR EXISTS(SELECT 1 FROM movimiento m WHERE m.producto_id=p.id))),0),true
+    ON CONFLICT(fecha) DO UPDATE SET materia_prima=excluded.materia_prima,producto_terminado=excluded.producto_terminado,alcance_comercial=true`);
 }

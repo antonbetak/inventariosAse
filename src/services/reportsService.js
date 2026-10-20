@@ -1,7 +1,11 @@
+import { commercialSales } from './commercial.js';
 import { inventoryService } from "./inventoryService.js";
 export const reportsService = {
-  async getSummary(snapshot) {
-    const data = snapshot ?? (await inventoryService.getSnapshot());
+  async getSummary(snapshot, options = {}) {
+    const source = snapshot ?? (await inventoryService.getSnapshot());
+    const allowed = row => options.includeTests || !row.es_prueba;
+    const data = {...source, rawMaterials: source.rawMaterials.filter(allowed), finishedProducts: source.finishedProducts.filter(allowed), movements: source.movements.filter(allowed)};
+    const sales = commercialSales(data.sales, options);
     const insumos = data.rawMaterials.map((i) => {
       const punto_reorden = Number(i.punto_reorden ?? Math.ceil(i.consumo_promedio * 2 + i.stock_minimo));
       return {
@@ -11,7 +15,7 @@ export const reportsService = {
       };
     });
     const rawValue = insumos.reduce(
-        (s, i) => s + i.stock_actual * i.costo_unidad,
+        (s, i) => s + (i.costo_pendiente || i.costo_unidad == null ? 0 : i.stock_actual * i.costo_unidad),
         0,
       ),
       productValue = data.finishedProducts.reduce(
@@ -37,8 +41,9 @@ export const reportsService = {
         m.valor;
     }
     return {
-      salesTotal: (data.sales??[]).reduce((sum,s)=>sum+Number(s.ingreso),0),
-      salesUnits: (data.sales??[]).reduce((sum,s)=>sum+Number(s.unidades),0),
+      sales,
+      salesTotal: sales.total,
+      salesUnits: sales.units,
       projectedLossCost: (data.projections??[]).reduce((sum,p)=>sum+Number(p.costo_merma),0),
       insumos,
       rawValue,
@@ -64,8 +69,8 @@ export const reportsService = {
         .slice(0, 6),
     };
   },
-  async getExportRows(snapshot) {
-    const { insumos } = await this.getSummary(snapshot);
+  async getExportRows(snapshot, options = {}) {
+    const { insumos } = await this.getSummary(snapshot, options);
     return insumos.map((i) => ({
       Nombre: i.nombre,
       Categoría: i.categoria,
@@ -74,9 +79,9 @@ export const reportsService = {
       "Consumo promedio": i.consumo_promedio,
       "Punto de reorden": i.punto_reorden,
       Unidad: i.unidad_medida,
-      "Costo unidad": i.costo_unidad,
-      "Valor en inventario": (i.stock_actual * i.costo_unidad).toFixed(2),
-      "Merma mensual (%)": (i.merma_mensual * 100).toFixed(2),
+      "Costo unidad": i.costo_pendiente || i.costo_unidad == null ? "Pendiente" : i.costo_unidad,
+      "Valor en inventario": i.costo_pendiente || i.costo_unidad == null ? "Pendiente" : (i.stock_actual * i.costo_unidad).toFixed(2),
+      "Muestra de merma (%) — periodo sin validar": (i.merma_mensual * 100).toFixed(2),
       "En riesgo": i.enRiesgo ? "Sí" : "No",
     }));
   },
