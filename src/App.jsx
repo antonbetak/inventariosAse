@@ -39,6 +39,12 @@ function App() {
     [deleting, setDeleting] = useState(false),
     [deleteError, setDeleteError] = useState("");
   const { data, reports, loading, error, refresh } = useInventory(!!user);
+  useEffect(() => authService.onSessionExpired(() => {
+    setUser(null);
+    setModal(null);
+    setDeleteRequest(null);
+    setNotice("");
+  }), []);
   useEffect(() => {
     let active = true;
     authService

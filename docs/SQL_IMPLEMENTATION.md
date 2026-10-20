@@ -48,7 +48,7 @@ La fórmula de reorden usa d·L + z·(d·σ)·√L; el pedido sugerido usa d·(T
 - Costos y unidades de los 17 insumos: las hojas 2 y 3 no contienen un catálogo completo. Se muestran como pendientes, con una advertencia de valuación parcial. Costo cero en la presentación es un importe aún desconocido, no una compra gratuita.
 - Recetas reales: no hay una matriz producto–insumo validada en estas hojas. No se cargaron recetas inventadas. La producción permite capturar consumos reales del lote; las unidades deben validarse antes de operar.
 - Fechas de las ocho muestras de merma y existencias físicas de producto terminado.
-- Primer usuario administrador: se proporciona un comando de alta mediante archivo privado. No se reutilizan las credenciales demo.
+- Administrador inicial creado en development mediante el mecanismo privado y una contraseña definida por el usuario. No se reutilizan las credenciales demo.
 
 ## Evidencia y límites
 
@@ -58,13 +58,13 @@ Aplicación de `001_schema.sql` en SQL Editor de Neon: 33 sentencias, COMMIT exi
 
 Build de producción completado correctamente (2,330 módulos); lint sin errores.
 
-Pruebas automatizadas locales: 7/7 de contraseñas, validación numérica, CSRF, métodos HTTP, tamaño/JSON y reportes. Estas pruebas no sustituyen una prueba completa contra PostgreSQL.
+Pruebas automatizadas locales: 10/10 de seguridad, contraseñas, validación numérica, CSRF, métodos HTTP, tamaño/JSON, reportes, rutas API, productos sin fecha y caducidad de sesión. Lint y build correctos. Las pruebas contra la Preview se describen abajo; el build por sí solo no valida PostgreSQL.
 
-El entorno de ejecución local no resuelve el host de Neon (`ENOTFOUND`) y bloquea el servidor HTTP local (`listen EPERM` en 127.0.0.1:5173); el backend no se ha validado de extremo a extremo contra la base remota. No se presenta la plataforma como lista para producción mientras falte esa verificación. Los datos en Neon sí se comprobaron mediante su consola web. También se ejecutaron directamente las seis consultas reales de lectura de la API: insumos, productos, movimientos, valuación e histórico de ventas; no hubo errores SQL.
+## Despliegue Preview
 
-## Despliegue preparado, no ejecutado
+Preview de la rama `feat/postgres-neon`: https://sanate-inventarios-2-git-feat-postg-294cb7-antonbetaks-projects.vercel.app
 
-Vercel dispone de configuración de build y funciones API. Antes de desplegar deben pasar instalación limpia, build, prueba de login, CRUD, dos ventas concurrentes sobre el último artículo, producción con stock insuficiente, agenda, recarga y cierre de sesión. Configurar DATABASE_URL exclusivamente en el entorno del servidor y APP_ORIGIN con el origen exacto. Una preview debe usar development. Producción exige autorización explícita del usuario y una migración/importación revisada; los scripts incluidos rechazan cualquier destino que no sea development y el host esperado.
+Proyecto Vercel `sanate-inventarios-2`, conexión privada a Neon development y APP_ORIGIN igual al origen exacto del alias. Las migraciones no se ejecutan durante el build. Se mantiene la protección de Vercel. Producción exige autorización explícita; no se ha modificado.
 
 No incluir Excel, JSON de importación, SQL con datos comerciales, archivos de acceso ni `.env.local` en commits, PR o directorios públicos.
 
@@ -82,4 +82,11 @@ La Preview reveló que la función con nombre `[...path].js` no atendía rutas a
 
 En la Preview de la rama, con registros identificados PRUEBA_PREVIEW, se completaron alta y edición desde React, entrada, producción con consumo de insumos y venta. Se rechazaron producción y venta con existencias insuficientes. Para probar concurrencia se retuvo temporalmente el mismo bloqueo transaccional en development y se enviaron dos ventas desde dos pestañas con una sola unidad disponible: ambas quedaron simultáneamente en curso; una se guardó, la otra se rechazó y el stock final fue cero. No se debilitó ninguna protección del navegador. Después de un rechazo se refresca el snapshot para evitar mostrar una existencia anterior a otra venta.
 
-La sesión persistió después de recargar y en otra pestaña. La conciliación de solo lectura confirmó 17/17 existencias importadas y 1,416/1,416 valores y fórmulas fuente sin diferencias. El Excel adjunto de nuevo es idéntico al original importado. Las pruebas locales son 9/9, con lint y build correctos. Los registros sintéticos quedan identificados en development y no se confunden con el Excel. Esto no valida todavía el cierre de sesión ni una segunda autenticación independiente, ni sustituye la confirmación comercial de unidades, costos y conteos físicos.
+La sesión persistió después de recargar y en otra pestaña. La conciliación de solo lectura confirmó 17/17 existencias importadas y 1,416/1,416 valores y fórmulas fuente sin diferencias. El Excel adjunto de nuevo es idéntico al original importado. Las pruebas locales son 10/10, con lint y build correctos. Los registros sintéticos quedan identificados en development y no se confunden con el Excel. Esto no valida todavía el cierre de sesión ni una segunda autenticación independiente, ni sustituye la confirmación comercial de unidades, costos y conteos físicos.
+
+
+## Caducidad de sesión y formularios móviles
+
+Una respuesta 401 de una API protegida elimina el usuario y los datos en memoria y devuelve al login. Un intento de login incorrecto no dispara esa transición. Se añadió una prueba automatizada del evento y su limpieza. El formulario limita sus columnas y controles al ancho disponible para que nombres largos de productos no ensanchen la pantalla móvil; la validación visual final de este ajuste requiere una sesión activa.
+
+Los registros PRUEBA_PREVIEW permanecen en development y sus operaciones se incluyen en los agregados de esta base de prueba. No se deben interpretar esos agregados como cifras comerciales conciliadas. Las filas históricas originales se conservaron.

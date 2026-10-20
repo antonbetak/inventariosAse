@@ -18,14 +18,17 @@ export function useInventory(enabled) {
         setState({ data, reports, loading: false, error: "" });
     } catch (error) {
       if (request === version.current)
-        setState((s) => ({ ...s, loading: false, error: error.message }));
+        setState((s) => ({ ...(error.status === 401 ? { data: null, reports: null } : s), loading: false, error: error.message }));
     }
   }, []);
   const invalidate = useCallback(() => {
     version.current += 1;
   }, []);
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      setState({ data: null, reports: null, loading: true, error: "" });
+      return;
+    }
     refresh();
     const stop = inventoryService.subscribe(refresh);
     return () => {
