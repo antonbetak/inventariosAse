@@ -15,7 +15,7 @@ export const reportsService = {
         0,
       ),
       productValue = data.finishedProducts.reduce(
-        (s, p) => s + p.cantidad * p.precioVenta,
+        (s, p) => s + (p.stock_pendiente ? 0 : p.cantidad * p.precioVenta),
         0,
       );
     const entradas = data.movements.filter((m) => m.tipo === "salida");

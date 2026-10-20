@@ -67,3 +67,11 @@ El entorno de ejecución local no resuelve el host de Neon (`ENOTFOUND`) y bloqu
 Vercel dispone de configuración de build y funciones API. Antes de desplegar deben pasar instalación limpia, build, prueba de login, CRUD, dos ventas concurrentes sobre el último artículo, producción con stock insuficiente, agenda, recarga y cierre de sesión. Configurar DATABASE_URL exclusivamente en el entorno del servidor y APP_ORIGIN con el origen exacto. Una preview debe usar development. Producción exige autorización explícita del usuario y una migración/importación revisada; los scripts incluidos rechazan cualquier destino que no sea development y el host esperado.
 
 No incluir Excel, JSON de importación, SQL con datos comerciales, archivos de acceso ni `.env.local` en commits, PR o directorios públicos.
+
+## Corrección de Preview: catálogo y existencias
+
+Se corrigió el contrato de productos para que la tabla acepte productos SQL sin fecha. La fecha mostrada es la del primer movimiento registrado, cuando existe; no se inventa una fecha de alta. Los productos importados con histórico de ventas y sin movimientos de inventario se muestran con existencias por confirmar, se excluyen de la valuación confirmada y requieren un conteo físico antes de vender o producir. Editar y guardar una cantidad explícita registra ese conteo como ajuste.
+
+La fila 35 de Hoja2 es la fuente del stock de insumos. Las muestras de merma (filas 48–49) son observaciones sin fecha y no sustituyen ese inventario. Los totales semanales de Producto Terminado de Hoja3 son parte de la planeación julio–diciembre, no un conteo físico actual. Esta corrección no cambia cantidades importadas ni ejecuta migraciones.
+
+Preview configurada con conexión development privada y APP_ORIGIN igual al alias de la rama. Se confirmó en logs GET /api/session 200, inventario sin sesión 401 y credenciales incorrectas 401. Primer administrador creado por mecanismo privado con contraseña definida por el usuario. Producción no se modificó.

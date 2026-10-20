@@ -10,7 +10,7 @@ import { FilterTabs } from "../ui/FilterTabs";
 import { StatusBadge } from "../ui/StatusBadge";
 import { DataTable } from "../ui/DataTable";
 import { EmptyState } from "../ui/EmptyState";
-import { money, dateLabel, stockStatus } from "../../utils/inventoryDisplay";
+import { money, dateLabel, stockStatus, sortProducts } from "../../utils/inventoryDisplay";
 
 export const TablaProductoTerminado = ({
   salidas = [],
@@ -20,8 +20,7 @@ export const TablaProductoTerminado = ({
 }) => {
   const [filter, setFilter] = useState("Todos");
   const [search, setSearch] = useState("");
-  const filtered = [...salidas]
-    .sort((a, b) => b.creadoEn.localeCompare(a.creadoEn))
+  const filtered = sortProducts(salidas)
     .filter(
       (p) =>
         `${p.nombre ?? ""} ${p.descripcion ?? ""}`
@@ -34,7 +33,7 @@ export const TablaProductoTerminado = ({
     <>
       <PageHeader
         title="Producto terminado"
-        description="Consulta y administra las salidas y productos registrados."
+        description="Consulta las existencias confirmadas de cada producto."
       >
         <GlassButton onClick={onAdd}>
           <Plus size={18} />
@@ -44,9 +43,9 @@ export const TablaProductoTerminado = ({
       <div className="stats-grid two">
         <StatCard
           icon={PackageCheck}
-          title="Salidas registradas"
+          title="Productos registrados"
           value={salidas.length}
-          detail="Historial de producción"
+          detail="Catálogo de productos"
           tone="teal"
         />
         <StatCard
@@ -55,13 +54,14 @@ export const TablaProductoTerminado = ({
           value={money(
             salidas.reduce(
               (sum, p) =>
-                sum + Number(p.cantidad ?? 0) * Number(p.precioVenta ?? 0),
+                sum + (p.stock_pendiente ? 0 : Number(p.cantidad ?? 0) * Number(p.precioVenta ?? 0)),
               0,
             ),
           )}
-          detail="Cantidad × precio de venta"
+          detail={salidas.some(p => p.stock_pendiente) ? "Valuación parcial · existencias por confirmar" : "Cantidad × precio de venta"}
         />
       </div>
+      {salidas.some(p => p.stock_pendiente) && <p className="form-info" role="status">El Excel contiene ventas históricas y producción proyectada, pero no un conteo físico actual de producto terminado. Confirma las existencias en Editar antes de registrar ventas o producción.</p>}
       <GlassCard className="table-panel">
         <div className="table-toolbar">
           <SearchInput
@@ -72,7 +72,7 @@ export const TablaProductoTerminado = ({
           <FilterTabs
             value={filter}
             onChange={setFilter}
-            options={["Todos", "Disponible", "Bajo", "Crítico"]}
+            options={["Todos", "Disponible", "Bajo", "Crítico", "Por confirmar"]}
           />
         </div>
         <DataTable
@@ -82,7 +82,7 @@ export const TablaProductoTerminado = ({
             "Descripción",
             "Cantidad",
             "Precio de venta",
-            "Fecha de registro",
+            "Primer movimiento",
             "Estado",
             "Acciones",
           ]}
@@ -102,7 +102,7 @@ export const TablaProductoTerminado = ({
                   "—"}
               </td>
               <td className="numeric">
-                {item.cantidad} <span className="muted">{item.unidad}</span>
+                {item.stock_pendiente ? "Por confirmar" : <>{item.cantidad} <span className="muted">{item.unidad}</span></>}
               </td>
               <td className="numeric">{money(item.precioVenta)}</td>
               <td className="muted">{dateLabel(item.creadoEn)}</td>

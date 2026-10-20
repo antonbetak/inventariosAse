@@ -21,6 +21,7 @@ export function ProductoTerminado({
       insumos: [],
     },
     ...producto,
+    ...(producto?.stock_pendiente ? { cantidad: "" } : {}),
   }));
   const [selected, setSelected] = useState(""),
     [quantity, setQuantity] = useState(""),
@@ -153,7 +154,7 @@ export function ProductoTerminado({
             id="product-description"
             name="descripcion"
             rows={2}
-            value={form.descripcion.replace(/^Lote demo SAN-/i, "Lote SAN-")}
+            value={(form.descripcion ?? "").replace(/^Lote demo SAN-/i, "Lote SAN-")}
             onChange={change}
             maxLength={600}
           />
