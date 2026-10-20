@@ -53,6 +53,7 @@ export function Header({ user, onLogout, onTabChange }) {
               "Dashboard",
               "Materia Prima",
               "Producto Terminado",
+              "Operaciones",
               "Reportes",
             ].map((tab) => (
               <button

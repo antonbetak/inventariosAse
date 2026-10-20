@@ -1,3 +1,4 @@
+import {CommercialSales} from './CommercialSales';
 import React, { memo, useState } from "react";
 import {
   Download,
@@ -82,6 +83,7 @@ export const Reportes = ({ reports, snapshot }) => {
           {exporting ? "Exportando…" : "Exportar CSV"}
         </GlassButton>
       </PageHeader>
+      <CommercialSales snapshot={snapshot} />
       <div className="stats-grid">
         <StatCard
           icon={Boxes}
@@ -92,15 +94,15 @@ export const Reportes = ({ reports, snapshot }) => {
         />
         <StatCard
           icon={Wallet}
-          title="Valor del inventario"
-          value={formatCurrency(reporteCompleto.valorTotal)}
-          detail="Stock actual × costo por unidad"
+          title="Insumos al costo validado"
+          value={reports.rawValueComplete?formatCurrency(reporteCompleto.valorTotal):"Pendiente de información"}
+          detail="Valuación parcial; costos pendientes excluidos"
         />
         <StatCard
           icon={ArrowDownLeft}
-          title="Entradas registradas"
+          title="Salidas registradas"
           value={resumenSalidas.registros}
-          detail={`Valor declarado: ${formatCurrency(resumenSalidas.valor)}`}
+          detail={resumenSalidas.valor==null?"Valuación pendiente":`Valor declarado: ${formatCurrency(resumenSalidas.valor)}`}
           tone="violet"
         />
         <StatCard
@@ -136,8 +138,8 @@ export const Reportes = ({ reports, snapshot }) => {
         </GlassCard>
         <GlassCard className="merma-panel">
           <SectionHeader
-            title="Merma mensual"
-            description="Los 3 insumos con mayor porcentaje"
+            title="Muestras de merma"
+            description="Muestras fuente sin periodo mensual confirmado"
           />
           {topMerma.length ? (
             topMerma.map((i, index) => (
@@ -153,7 +155,7 @@ export const Reportes = ({ reports, snapshot }) => {
                     />
                   </div>
                 </div>
-                <span>{(i.merma_mensual * 100).toFixed(2)}%</span>
+                <span>{i.merma_mensual==null?"Pendiente":`${(i.merma_mensual * 100).toFixed(2)}%`}</span>
               </div>
             ))
           ) : (
@@ -162,13 +164,13 @@ export const Reportes = ({ reports, snapshot }) => {
               description="Los porcentajes disponibles aparecerán aquí."
             />
           )}
-          <p className="stock-note">Porcentajes registrados por insumo.</p>
+          <p className="stock-note">Observaciones del Excel sin fecha; no representan pérdida mensual real.</p>
         </GlassCard>
       </div>
       <GlassCard className="movements-chart">
         <SectionHeader
           title="Entradas y salidas"
-          description="Valor de movimientos por día · MXN"
+          description="Valor declarado de movimientos · MXN; insumos al costo disponible y productos a precio de venta. No es utilidad."
         />
         <MovementChart data={movementDays} />
         <div className="chart-footnote">
@@ -215,8 +217,8 @@ export const Reportes = ({ reports, snapshot }) => {
               <td>{i.stock_minimo}</td>
               <td>{i.punto_reorden}</td>
               <td>{i.consumo_promedio || "—"}</td>
-              <td>{formatCurrency(i.costo_unidad)}</td>
-              <td>{(i.merma_mensual * 100).toFixed(2)}%</td>
+              <td>{i.costo_pendiente || i.costo_unidad == null ? "Pendiente" : formatCurrency(i.costo_unidad)}</td>
+              <td>{i.merma_mensual==null?"Pendiente":`${(i.merma_mensual * 100).toFixed(2)}%`}</td>
               <td>
                 <span
                   className={`status-badge ${i.enRiesgo ? "low" : "healthy"}`}

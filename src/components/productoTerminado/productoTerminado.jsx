@@ -12,7 +12,7 @@ export function ProductoTerminado({
   const [form, setForm] = useState(() => ({
     ...{
       nombre: "",
-      categoria: "Higiene",
+      categoria: "Agua purificada",
       cantidad: "",
       stock_minimo: 0,
       precioVenta: "",
@@ -21,6 +21,7 @@ export function ProductoTerminado({
       insumos: [],
     },
     ...producto,
+    ...(producto?.stock_pendiente ? { cantidad: "" } : {}),
   }));
   const [selected, setSelected] = useState(""),
     [quantity, setQuantity] = useState(""),
@@ -92,11 +93,11 @@ export function ProductoTerminado({
             id="product-name"
             name="nombre"
             required
-            maxLength={120}
+            maxLength={50}
             value={form.nombre}
             onChange={change}
             list="product-examples"
-            placeholder="Ej. Gel antibacterial 500 ml"
+            placeholder="Ej. Garrafón 20L"
           />
           <datalist id="product-examples">
             {inventoryService.recipeNames.map((name) => (
@@ -140,7 +141,7 @@ export function ProductoTerminado({
                 name={name}
                 min="0"
                 step="any"
-                required
+                required={name !== "cantidad" || !producto?.stock_pendiente}
                 value={form[name]}
                 onChange={change}
               />
@@ -153,11 +154,13 @@ export function ProductoTerminado({
             id="product-description"
             name="descripcion"
             rows={2}
-            value={form.descripcion.replace(/^Lote demo SAN-/i, "Lote SAN-")}
+            value={(form.descripcion ?? "").replace(/^Lote demo SAN-/i, "Lote SAN-")}
             onChange={change}
             maxLength={600}
           />
         </div>
+        {producto?.stock_pendiente && <p className="form-info">Existencias por confirmar. Deja la cantidad vacía para conservar ese estado; captura un conteo físico explícito para confirmarlas.</p>}
+        {!producto && <label><input type="checkbox" checked={form.es_prueba === true} onChange={e=>setForm({...form,es_prueba:e.target.checked})} /> Registro de prueba (clasificación permanente)</label>}
         {!producto && (
           <>
             <h3>

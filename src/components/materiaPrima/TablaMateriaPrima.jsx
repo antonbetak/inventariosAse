@@ -21,20 +21,21 @@ import { EmptyState } from "../ui/EmptyState";
 import { money, stockStatus } from "../../utils/inventoryDisplay";
 
 export const TablaMateriaPrima = ({
-  materia = [],
+  materia: allMateria = [],
   onAdd,
   onEntry,
   onEdit,
   onDelete,
 }) => {
+  const [includeTests,setIncludeTests] = useState(false);
+  const materia = useMemo(()=>allMateria.filter(i=>includeTests||!i.es_prueba),[allMateria,includeTests]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Todos");
-  const { totalUnidades, valorTotal, bajoStock } = useMemo(() => {
+  const { valorTotal, bajoStock } = useMemo(() => {
     return materia.reduce(
       (acc, i) => {
-        acc.totalUnidades += Number(i.stock_actual || 0);
         acc.valorTotal +=
-          Number(i.stock_actual || 0) * Number(i.costo_unidad || 0);
+          i.costo_pendiente || i.costo_unidad == null ? 0 : Number(i.stock_actual || 0) * Number(i.costo_unidad);
         if (i.stock_actual <= i.stock_minimo) acc.bajoStock += 1;
         return acc;
       },
@@ -67,13 +68,14 @@ export const TablaMateriaPrima = ({
           icon={Boxes}
           title="Insumos registrados"
           value={materia.length}
-          detail={`${totalUnidades.toLocaleString("es-MX")} unidades agregadas · diferentes medidas`}
+          detail={includeTests ? "Incluye registros de prueba" : "Catálogo comercial; pruebas excluidas"}
           tone="teal"
         />
         <StatCard
           icon={Wallet}
-          title="Valor del inventario"
-          value={money(valorTotal)}
+          title="Insumos al costo validado"
+          detail="Valuación parcial; costos pendientes excluidos"
+          value={materia.some(i=>i.costo_pendiente||i.costo_unidad==null)?"Pendiente de información":money(valorTotal)}
         />
         <StatCard
           icon={TriangleAlert}
@@ -83,6 +85,7 @@ export const TablaMateriaPrima = ({
           tone="amber"
         />
       </div>
+      <label><input type="checkbox" checked={includeTests} onChange={e=>setIncludeTests(e.target.checked)}/> Incluir registros de prueba</label>
       <GlassCard className="table-panel">
         <div className="table-toolbar">
           <SearchInput value={search} onChange={setSearch} />
@@ -119,7 +122,7 @@ export const TablaMateriaPrima = ({
               </td>
               <td className="muted">{m.unidad_medida || "—"}</td>
               <td>{m.stock_minimo}</td>
-              <td className="numeric">{money(m.costo_unidad)}</td>
+              <td className="numeric">{m.costo_pendiente || m.costo_unidad == null ? "Pendiente" : money(m.costo_unidad)}</td>
               <td>
                 <StatusBadge status={stockStatus(m)} />
               </td>

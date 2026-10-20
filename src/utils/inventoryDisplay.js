@@ -5,7 +5,7 @@ export const money = (value) =>
     maximumFractionDigits: 2,
   });
 export const stockStatus = (item) =>
-  Number(item.stock_actual ?? 0) <= 0
+  item.stock_pendiente ? "Por confirmar" : Number(item.stock_actual ?? 0) <= 0
     ? "Crítico"
     : Number(item.stock_actual) <= Number(item.stock_minimo ?? 0)
       ? "Bajo"
@@ -20,3 +20,7 @@ export const dateLabel = (value) =>
     dateStyle: "medium",
     timeStyle: "short",
   }) ?? "Sin fecha registrada";
+
+export const sortProducts = (products) => [...products].sort((a, b) =>
+  (b.creadoEn ?? '').localeCompare(a.creadoEn ?? '') || a.nombre.localeCompare(b.nombre),
+);
