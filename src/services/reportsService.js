@@ -32,13 +32,13 @@ export const reportsService = {
       .slice(0, 7);
     const movementDays = new Map();
     for (const m of data.movements.filter((m) =>
-      ["entrada", "salida"].includes(m.tipo),
+      ["entrada", "salida"].includes(m.tipo) && m.valor_conocido!==false,
     )) {
       const day = m.fecha.slice(0, 10);
       if (!movementDays.has(day))
         movementDays.set(day, { fecha: day, entradas: 0, salidas: 0 });
       movementDays.get(day)[m.tipo === "entrada" ? "entradas" : "salidas"] +=
-        m.valor;
+        m.valor_conocido===false ? 0 : m.valor;
     }
     return {
       sales,
@@ -47,23 +47,25 @@ export const reportsService = {
       projectedLossCost: (data.projections??[]).reduce((sum,p)=>sum+Number(p.costo_merma),0),
       insumos,
       rawValue,
+      rawValueComplete: insumos.every(i=>!i.costo_pendiente&&i.costo_unidad!=null),
+      productValueComplete: data.finishedProducts.every(p=>!p.stock_pendiente),
       productValue,
-      totalValue: rawValue + productValue,
+      totalValue: insumos.some(i=>i.costo_pendiente||i.costo_unidad==null)||data.finishedProducts.some(p=>p.stock_pendiente)?null:rawValue + productValue,
       resumen: { necesitanReorden: insumos.filter((i) => i.enRiesgo).length },
       resumenEntradas: { registros: insumos.length, valor: rawValue },
       resumenSalidas: {
         registros: entradas.length,
-        valor: entradas.reduce((s, i) => s + i.valor, 0),
+        valor: entradas.some(i=>i.valor_conocido===false)?null:entradas.reduce((s, i) => s + i.valor, 0),
       },
       reporteCompleto: { totalItems: insumos.length, valorTotal: rawValue },
       datosGrafica,
-      topMerma: [...insumos]
+      topMerma: insumos.filter(i=>i.merma_mensual!=null)
         .sort((a, b) => b.merma_mensual - a.merma_mensual)
         .slice(0, 3),
       movementDays: [...movementDays.values()]
         .sort((a, b) => a.fecha.localeCompare(b.fecha))
         .slice(-7),
-      history: data.history,
+      history: insumos.every(i=>!i.costo_pendiente&&i.costo_unidad!=null)?data.history:[],
       activity: [...data.movements]
         .sort((a, b) => b.fecha.localeCompare(a.fecha))
         .slice(0, 6),
@@ -81,7 +83,7 @@ export const reportsService = {
       Unidad: i.unidad_medida,
       "Costo unidad": i.costo_pendiente || i.costo_unidad == null ? "Pendiente" : i.costo_unidad,
       "Valor en inventario": i.costo_pendiente || i.costo_unidad == null ? "Pendiente" : (i.stock_actual * i.costo_unidad).toFixed(2),
-      "Muestra de merma (%) — periodo sin validar": (i.merma_mensual * 100).toFixed(2),
+      "Muestra de merma (%) — periodo sin validar": i.merma_mensual==null?"Pendiente":(i.merma_mensual * 100).toFixed(2),
       "En riesgo": i.enRiesgo ? "Sí" : "No",
     }));
   },

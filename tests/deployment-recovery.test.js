@@ -13,3 +13,10 @@ test('Sin almacenamiento para limitar recargas conserva el error original',()=>{
  recoverDeployment({preventDefault:()=>assert.fail('No ocultar error')},{sessionStorage:{getItem:()=>{throw Error('disabled');}},location:{reload:()=>reloads++}});
  assert.equal(reloads,0);
 });
+test('Una versión nueva se detecta sin recargar formularios ni confundir errores de red',async()=>{
+ const {checkDeploymentVersion}=await import('../src/services/deploymentRecovery.js');
+ assert.equal(await checkDeploymentVersion('old',async()=>({ok:true,json:async()=>({id:'new'})})),true);
+ assert.equal(await checkDeploymentVersion('same',async()=>({ok:true,json:async()=>({id:'same'})})),false);
+ assert.equal(await checkDeploymentVersion('old',async()=>({ok:false})),false);
+ await assert.rejects(checkDeploymentVersion('old',async()=>{throw Error('offline');}));
+});

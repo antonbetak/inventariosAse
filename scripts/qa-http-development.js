@@ -18,7 +18,7 @@ try{
  assert.equal((await call('inventory')).status,401);pass('Inventario protegido sin sesión');
  assert.equal((await call('session','POST',{username,password},'','https://invalid.example')).status,403);pass('Origin ajeno rechazado');
  assert.equal((await call('session','POST',{username,password:'incorrecta'})).status,401);pass('Credenciales incorrectas rechazadas');
- const first=await call('session','POST',{username,password});assert.equal(first.status,200);assert.match(first.cookie,/HttpOnly/);assert.match(first.cookie,/SameSite=Strict/);const cookie1=first.cookie.split(';')[0];pass('Login real y cookie HttpOnly SameSite');
+ const first=await call('session','POST',{username,password});assert.equal(first.status,200);assert.match(first.cookie,/HttpOnly/);assert.match(first.cookie,/SameSite=Strict/);if(process.env.NODE_ENV==='production'){assert.match(first.cookie,/Secure/);assert.match(first.cookie,/__Host-sanate=/);}const cookie1=first.cookie.split(';')[0];pass('Login real y cookie HttpOnly SameSite');
  const second=await call('session','POST',{username,password});assert.equal(second.status,200);const cookie2=second.cookie.split(';')[0];assert.notEqual(cookie1,cookie2);pass('Segunda autenticación independiente');
  assert.equal((await call('session','GET',null,cookie1)).data.id,id);assert.equal((await call('inventory','GET',null,cookie2)).status,200);pass('Sesión persistente y consulta SQL desde HTTP');
  assert.equal((await call('session','DELETE',{},cookie1)).status,200);assert.equal((await call('inventory','GET',null,cookie1)).status,401);assert.equal((await call('inventory','GET',null,cookie2)).status,200);pass('Logout revoca solo su sesión');
@@ -27,6 +27,7 @@ try{
  const task=await call('planner','POST',{title:`QA_HTTP_${id}`,priority:'Baja'},cookie2);assert.equal(task.status,200);const t=task.data.tasks.find(t=>t.title===`QA_HTTP_${id}`);assert.ok(t);assert.equal((await call(`planner/${t.id}`,'PATCH',{},cookie2)).data.tasks.find(x=>x.id===t.id).completed,true);pass('Agenda crea y completa tarea persistida');
  assert.equal((await call('commercial-data','POST',{kind:'recipe',id:1,insumos:[]},cookie2)).status,403);pass('Validación comercial reservada a administrador');
  await db.query('UPDATE app_session SET expires_at=now()-interval \'1 second\' WHERE user_id=$1',[id]);assert.equal((await call('inventory','GET',null,cookie2)).status,401);pass('Caducidad real rechaza acceso');
+ for(let attempt=0;attempt<10;attempt++)assert.equal((await call('session','POST',{username,password:'wrong-for-limit'})).status,401);assert.equal((await call('session','POST',{username,password:'wrong-for-limit'})).status,429);pass('Rate limit persistente rechaza el intento once');
  console.log(JSON.stringify({passed:results.length,results},null,2));
 }finally{
  await db.query('DELETE FROM app_session WHERE user_id=$1',[id]);await db.query('UPDATE app_user SET activo=false WHERE id=$1',[id]);await new Promise(resolve=>server.close(resolve));await db.end();

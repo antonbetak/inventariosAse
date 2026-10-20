@@ -95,14 +95,14 @@ export const Reportes = ({ reports, snapshot }) => {
         <StatCard
           icon={Wallet}
           title="Insumos al costo validado"
-          value={formatCurrency(reporteCompleto.valorTotal)}
+          value={reports.rawValueComplete?formatCurrency(reporteCompleto.valorTotal):"Pendiente de información"}
           detail="Valuación parcial; costos pendientes excluidos"
         />
         <StatCard
           icon={ArrowDownLeft}
           title="Salidas registradas"
           value={resumenSalidas.registros}
-          detail={`Valor declarado: ${formatCurrency(resumenSalidas.valor)}`}
+          detail={resumenSalidas.valor==null?"Valuación pendiente":`Valor declarado: ${formatCurrency(resumenSalidas.valor)}`}
           tone="violet"
         />
         <StatCard
@@ -155,7 +155,7 @@ export const Reportes = ({ reports, snapshot }) => {
                     />
                   </div>
                 </div>
-                <span>{(i.merma_mensual * 100).toFixed(2)}%</span>
+                <span>{i.merma_mensual==null?"Pendiente":`${(i.merma_mensual * 100).toFixed(2)}%`}</span>
               </div>
             ))
           ) : (
@@ -218,7 +218,7 @@ export const Reportes = ({ reports, snapshot }) => {
               <td>{i.punto_reorden}</td>
               <td>{i.consumo_promedio || "—"}</td>
               <td>{i.costo_pendiente || i.costo_unidad == null ? "Pendiente" : formatCurrency(i.costo_unidad)}</td>
-              <td>{(i.merma_mensual * 100).toFixed(2)}%</td>
+              <td>{i.merma_mensual==null?"Pendiente":`${(i.merma_mensual * 100).toFixed(2)}%`}</td>
               <td>
                 <span
                   className={`status-badge ${i.enRiesgo ? "low" : "healthy"}`}

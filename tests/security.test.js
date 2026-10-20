@@ -7,7 +7,7 @@ test('Contraseñas: sal aleatoria, verificación y rechazo de credenciales incor
 });
 test('Cantidades inválidas no se convierten silenciosamente en stock',()=>{
  for(const value of ['',null,undefined,true,[],{},'  ',-1,Infinity,'NaN'])assert.throws(()=>numeric(value,'Stock'));
- assert.equal(numeric('1.25','Stock'),1.25);assert.throws(()=>numeric(1.5,'Venta',{integer:true}));assert.throws(()=>numeric(0,'Entrada',{positive:true}));
+ assert.equal(numeric('1.25','Stock'),1.25);assert.throws(()=>numeric(.001,'Importe',{scale:2}));assert.equal(numeric(.236,'Costo'),.236);assert.throws(()=>numeric(1.5,'Venta',{integer:true}));assert.throws(()=>numeric(0,'Entrada',{positive:true}));
 });
 test('CSRF: exige el origen exacto configurado',()=>{
  process.env.APP_ORIGIN='https://sanate.example';checkOrigin({headers:{origin:'https://sanate.example'}});for(const origin of [undefined,'null','https://evil.example','https://sanate.example.evil.test'])assert.throws(()=>checkOrigin({headers:{origin}}));

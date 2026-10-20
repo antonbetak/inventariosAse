@@ -74,20 +74,20 @@ export const Dashboard = memo(function Dashboard({
         <StatCard
           icon={Wallet}
           title="Insumos al costo validado"
-          value={money(rawValue)}
+          value={reports.rawValueComplete?money(rawValue):"Pendiente de información"}
           detail="Valuación parcial: faltan costos de insumos"
         />
         <StatCard
           icon={Boxes}
           title="Materia prima"
-          value={money(rawValue)}
+          value={reports.rawValueComplete?money(rawValue):"Pendiente de información"}
           detail={`${materiaPrima.length} insumos registrados`}
           tone="teal"
         />
         <StatCard
           icon={PackageCheck}
           title="Productos a precio de venta"
-          value={money(productValue)}
+          value={reports.productValueComplete?money(productValue):"Conteo pendiente"}
           detail={`${products.length} productos; costo contable pendiente`}
           tone="violet"
         />

@@ -135,7 +135,7 @@ function App() {
       activeTab={activeTab}
       onTabChange={setActiveTab}
     >
-      {(data?.rawMaterials.some(i=>i.costo_pendiente) || data?.finishedProducts.some(p=>p.stock_pendiente)) && <div className="form-info" role="status">Valuación parcial: hay costos, unidades o existencias por confirmar. Un importe de $0 no significa que todos los inventarios estén vacíos. Revisa las advertencias de cada registro.</div>}
+      {(data?.rawMaterials.some(i=>i.costo_pendiente) || data?.finishedProducts.some(p=>p.stock_pendiente)) && <div className="form-info" role="status">Valuación parcial: hay costos, unidades o existencias por confirmar. Los datos pendientes no se consideran ceros confirmados. Completa los datos en cada registro.</div>}
       <Suspense fallback={<LoadingState />}>
         <div className="page-view" key={activeTab}>
           {loading ? (

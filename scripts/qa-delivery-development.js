@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import {database} from '../server/db.js';
+import {snapshot,mutateInventory} from '../server/inventory.js';
+import {saveCommercialData} from '../server/commercial-data.js';
+import {operationalData} from '../server/operational-data.js';
+import {planner} from '../server/planner.js';
+try{process.loadEnvFile('.env.local');}catch{/* environment */}
+if(process.env.DATABASE_BRANCH!=='development'||new URL(process.env.DATABASE_URL).hostname!==process.env.EXPECTED_DATABASE_HOST)throw Error('Development guard');
+const db=database(),results=[],pass=s=>results.push(s);
+try{
+ const user=(await db.query("SELECT id,rol FROM app_user WHERE activo AND rol='admin' LIMIT 1")).rows[0],suffix=Date.now();
+ const baseline=(await db.query('SELECT hoja,celda,valor,formula FROM fuente_celda ORDER BY importacion_id,hoja,celda')).rows;
+ const raw=await mutateInventory('raw',null,'save',{nombre:`QA_DELIVERY_RAW_${suffix}`,categoria:'QA',stock_actual:20,stock_minimo:0,costo_unidad:.236,unidad_medida:'pzas',es_prueba:true},user);
+ assert.equal((await snapshot()).rawMaterials.find(i=>i.id===raw.id).costo_unidad,.236);await mutateInventory('raw',raw.id,'save',{...(await snapshot()).rawMaterials.find(i=>i.id===raw.id),costo_unidad:2},user);pass('Costo fraccional conserva precisión antes de actualizarlo explícitamente');
+ const product=await mutateInventory('product',null,'save',{nombre:`QA_DELIVERY_PROD_${suffix}`,categoria:'QA',cantidad:0,precioVenta:8,unidad:'unidades',es_prueba:true},user);
+ await saveCommercialData({kind:'recipe',id:product.id,insumos:[{id:raw.id,cantidadUsada:2.5}]},user);
+ await mutateInventory('product',product.id,'production',{quantity:2,useRecipe:true,costo_adicional:3,insumos:[{id:'invalid',cantidadUsada:100}]},user);
+ let s=await snapshot(),batch=s.batches.find(b=>b.nombre===`QA_DELIVERY_PROD_${suffix}`);assert.equal(s.rawMaterials.find(i=>i.id===raw.id).stock_actual,15);assert.equal(batch.costo_insumos,10);assert.equal(batch.costo_adicional,3);pass('Receta ejecutada en servidor y costo de lote capturado sin aceptar consumo manipulado');
+ await operationalData({kind:'batch-cost',id:batch.id,costo_adicional:''},user);assert.equal((await snapshot()).batches.find(b=>b.id===batch.id).costo_adicional,null);pass('Costo de lote vacío permanece NULL');
+ const beforeCostStock=(await snapshot()).finishedProducts.find(p=>p.id===product.id).cantidad;await operationalData({kind:'batch-cost',id:batch.id,costo_insumos:999,costo_adicional:0},user);assert.equal((await snapshot()).batches.find(b=>b.id===batch.id).costo_insumos,10);assert.equal((await snapshot()).finishedProducts.find(p=>p.id===product.id).cantidad,beforeCostStock);pass('Completar costos conserva costo original y audita sin ajustar stock');
+ await operationalData({kind:'expense',fecha:'2026-10-20',concepto:`QA_GASTO_${suffix}`,importe:12.5,es_prueba:true},user);assert.equal((await snapshot()).expenses.find(e=>e.concepto===`QA_GASTO_${suffix}`).es_prueba,true);pass('Gasto persistido con ámbito de prueba');
+ await operationalData({kind:'loss',entity:'raw',id:raw.id,quantity:1,fecha:'2026-10-20',motivo:'QA merma'},user);assert.equal((await snapshot()).rawMaterials.find(i=>i.id===raw.id).stock_actual,14);assert.ok((await snapshot()).actualLosses.some(l=>l.motivo==='QA merma'&&l.es_prueba));pass('Merma descuenta stock y conserva movimiento enlazado');
+ const ledger=await db.query('SELECT (SELECT count(*) FROM movimiento) m,(SELECT count(*) FROM merma_operativa) l');await assert.rejects(operationalData({kind:'loss',entity:'product',id:product.id,quantity:3,fecha:'2026-10-20',motivo:'QA insuficiente'},user),/insuficiente/);assert.deepEqual((await db.query('SELECT (SELECT count(*) FROM movimiento) m,(SELECT count(*) FROM merma_operativa) l')).rows,ledger.rows);pass('Merma insuficiente revierte ledger y existencia');
+ await mutateInventory('raw',raw.id,'save',{...(await snapshot()).rawMaterials.find(i=>i.id===raw.id),costo_unidad:''},user);await mutateInventory('product',product.id,'production',{quantity:1,useRecipe:true,costo_adicional:0},user);const missing=(await snapshot()).batches.find(b=>b.nombre===`QA_DELIVERY_PROD_${suffix}`&&b.costo_insumos==null);assert.ok(missing);await operationalData({kind:'batch-cost',id:missing.id,costo_insumos:.59,costo_adicional:0},user);assert.equal((await snapshot()).batches.find(b=>b.id===missing.id).costo_insumos,.59);pass('Costo de insumos desconocido se completa con importe documentado sin precios retroactivos');
+ await assert.rejects(mutateInventory('product',product.id,'save',{...(await snapshot()).finishedProducts.find(p=>p.id===product.id),cantidad:.5},user),/cantidad no válida/);pass('Conteo fraccional de unidades rechazado');
+ const material=(await snapshot()).rawMaterials.find(i=>i.id===raw.id);await mutateInventory('raw',raw.id,'save',{...material,unidad_medida:'L'},user);await assert.rejects(mutateInventory('product',product.id,'production',{quantity:1,useRecipe:true},user),/receta validada/);assert.equal((await snapshot()).batches.find(b=>b.id===batch.id).costo_insumos,10);pass('Cambiar unidad invalida recetas sin recalcular costos históricos');
+ const fake={id:'00000000-0000-0000-0000-000000000000',rol:'operador'};
+ let data=await planner(['planner','events'],'POST',{title:`QA_EVENT_${suffix}`,date:'2026-10-20',time:'12:30'},user);const event=data.events.find(e=>e.title===`QA_EVENT_${suffix}`);assert.ok(event);
+ await assert.rejects(planner(['planner','events',event.id],'PATCH',{title:'Ajeno',date:'2026-10-20',time:''},fake),/no encontrado/);
+ data=await planner(['planner','events',event.id],'PATCH',{title:`QA_EVENT_EDIT_${suffix}`,date:'2026-10-21',time:'13:00'},user);assert.equal(data.events.find(e=>e.id===event.id).date,'2026-10-21');data=await planner(['planner','events',event.id],'DELETE',{},user);assert.ok(!data.events.some(e=>e.id===event.id));pass('Recordatorio CRUD y aislamiento por usuario');
+ data=await planner(['planner'],'POST',{title:`QA_TASK_${suffix}`,priority:'Alta'},user);const t=data.tasks.find(t=>t.title===`QA_TASK_${suffix}`);data=await planner(['planner',t.id],'PATCH',{title:`QA_TASK_EDIT_${suffix}`,priority:'Baja'},user);assert.equal(data.tasks.find(x=>x.id===t.id).priority,'Baja');await planner(['planner',t.id],'DELETE',{},user);pass('Tarea permite editar y eliminar sin simulación');
+ await mutateInventory('raw',raw.id,'delete',{},user);await mutateInventory('product',product.id,'delete',{},user);s=await snapshot();assert.ok(!s.rawMaterials.some(i=>i.id===raw.id));assert.ok(!s.finishedProducts.some(p=>p.id===product.id));assert.ok(s.movements.some(m=>m.registroId===product.id&&m.es_prueba));pass('Bajas lógicas conservan operaciones e historial');
+ assert.deepEqual((await db.query('SELECT hoja,celda,valor,formula FROM fuente_celda ORDER BY importacion_id,hoja,celda')).rows,baseline);pass('Integridad exacta de todas las celdas fuente tras las pruebas');
+ console.log(JSON.stringify({passed:results.length,results},null,2));
+}finally{await db.end();}

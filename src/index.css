@@ -3854,3 +3854,26 @@ body {
     transform: none;
   }
 }
+
+/* Long operational forms and traceable references stay inside their surfaces. */
+.recovery-panel { max-width: 38rem; padding: 2rem; margin: 1rem; }
+.update-notice { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); z-index: 100; width: min(92vw,42rem); padding: 1rem; display: flex; gap: 1rem; align-items: center; }
+.operational-form, .operational-form fieldset, .operational-form label { min-width: 0; }
+.operational-form input, .operational-form select, .operational-form textarea { width: 100%; max-width: 100%; min-width: 0; }
+.operational-form input[type="checkbox"] { width: auto; }
+.agenda-event { overflow-wrap: anywhere; }
+.agenda-event .row-actions { margin-left: auto; }
+.form-info, .stat-detail { overflow-wrap: anywhere; }
+@media (max-width: 640px) { .update-notice { flex-direction: column; align-items: stretch; } .operational-form .form-grid { grid-template-columns: minmax(0,1fr); } }
+.glass-card.commercial-panel { padding: 24px; }
+.commercial-panel h2, .operational-records h2 { margin-bottom: 12px; }
+.commercial-panel p, .operational-records p { margin-block: 12px; line-height: 1.6; }
+.commercial-panel .table-scroll { margin-top: 16px; }
+.operational-records h3 { margin-block: 24px 12px; }
+.form-grid.inventory-form label { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.form-grid.inventory-form label:has(input[type="checkbox"]) { flex-direction: row; align-items: center; }
+.inventory-form input[type="checkbox"] { width: auto; min-height: 16px; }
+@media (max-width: 640px) { .glass-card.commercial-panel { padding: 16px; } }
+.agenda-event time { flex: 0 0 3rem; white-space: nowrap; align-self: flex-start; }
+.agenda-event > div { min-width: 0; flex: 1; }
+.inventory-form select { appearance: none; -webkit-appearance: none; min-height: 44px; padding-right: 32px; background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%); background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }

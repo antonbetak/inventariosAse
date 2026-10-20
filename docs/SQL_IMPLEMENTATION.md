@@ -5,7 +5,7 @@
 - Origen local auditado: `/Users/anton/Documents/inventariosAse`, rama `sanate-2.0`, commit `5b6e3b3`.
 - Copia aislada: `/Users/anton/Documents/Codex/2026-10-19/new-chat-2/sanate`, rama `feat/postgres-neon`.
 - Neon: proyecto Sanaté; rama de pruebas `development` (`br-autumn-glitter-b5zhhqxp`), hija de `production`, sin caducidad automática.
-- No se modificó la base `production`, ni se desplegó ni se enviaron cambios al repositorio remoto.
+- No se modificó la base `production`. La rama autorizada tiene despliegues Preview y commits remotos; la evidencia inicial de instalación se conserva como antecedente.
 - La conexión se guardó en `.env.local`, ignorado por Git, con permisos 0600. El backend fuerza verificación de certificado TLS. React no recibe la conexión.
 
 ## Arquitectura
@@ -115,4 +115,11 @@ Los costos vacíos se conservan NULL y se exportan como pendientes; cero explíc
 
 La validación visual móvil/escritorio y React → API → SQL desde la Preview protegida sigue pendiente: el servicio de control del navegador no inició y la credencial local de Vercel devolvió 403. Estos controles no se sustituyen por el build ni por las pruebas HTTP locales. No se han debilitado las protecciones de Vercel.
 
-Pendientes comerciales: conteos físicos de productos importados, costos/unidades validados, recetas reales y fechas de muestras. Existen formularios para capturarlos; las pruebas sintéticas no completan esos datos comerciales. Producción, Neon production y el proyecto Vercel inventarios-ase permanecen intactos.
+Pendientes comerciales: conteos físicos de productos importados, costos/unidades validados, recetas reales y fechas de muestras. Existen formularios para capturarlos; las pruebas sintéticas no completan esos datos comerciales. No se ejecutaron cambios de producción ni escrituras en Neon production. El push activó también Preview automático del proyecto inventarios-ase por su conexión Git existente; no se modificó su configuración.
+
+
+## Cierre funcional y migración 004
+
+La migración 004 fue aplicada exclusivamente en development, después de comprobar las versiones existentes. Mantiene todas las fuentes importadas y añade `stock_confirmado`, evidencia de valuación por movimiento, costos por lote, gastos y merma operativa con referencia al movimiento. El arranque y el build no migran. La agenda ahora guarda, edita y elimina recordatorios; tareas admite edición. Las recetas se calculan en el servidor al producir y un cambio de unidad invalida las recetas dependientes.
+
+Las verificaciones iniciales de Preview del commit a0f4bd5 se completaron posteriormente usando Safari: Ready/Preview, SHA y alias confirmados, producción/venta con 200, rechazo sin stock con 400 y CSV comercial descargado. La revisión visual de esa sesión tenía capturas distorsionadas. La evidencia del cierre posterior, navegadores y límites actuales se consolida en [ENTREGA_FINAL.md](ENTREGA_FINAL.md); las anotaciones anteriores son evidencia histórica, no resultados que se atribuyan automáticamente a versiones nuevas.

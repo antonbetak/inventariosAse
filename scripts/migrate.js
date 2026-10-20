@@ -10,5 +10,7 @@ try {
   const versions=await db.query('SELECT version FROM schema_migration');
   if(!versions.rows.some(r=>r.version==='002'))await db.query(await readFile(new URL('../db/002_fields.sql',import.meta.url),'utf8'));
   if(!versions.rows.some(r=>r.version==='003'))await db.query(await readFile(new URL('../db/003_commercial_scope.sql',import.meta.url),'utf8'));
-  console.log('Esquema 003 listo.');
+  if(!versions.rows.some(r=>r.version==='004'))await db.query(await readFile(new URL('../db/004_delivery.sql',import.meta.url),'utf8'));
+  if(!versions.rows.some(r=>r.version==='005'))await db.query(await readFile(new URL('../db/005_cost_precision.sql',import.meta.url),'utf8'));
+  console.log('Esquema 005 listo.');
 }finally{await db.end();}

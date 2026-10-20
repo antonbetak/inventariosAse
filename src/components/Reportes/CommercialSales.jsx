@@ -10,13 +10,13 @@ export function CommercialSales({snapshot}) {
   const result=commercialSales(snapshot.sales,options);
   const change=e=>setOptions({...options,[e.target.name]:e.target.type==='checkbox'?e.target.checked:e.target.value});
   const rows=result.rows.map(s=>({Periodo:s.periodo,Producto:s.nombre,Origen:s.origen==='historico'?'Excel Hoja3':'Operación',Ámbito:s.es_prueba?'Prueba':'Comercial',Unidades:s.unidades,'Precio unitario':s.precio_unitario,Ingreso:s.ingreso,'ID fuente':s.importacion_id??s.id}));
-  return <GlassCard className="table-panel">
+  return <GlassCard className="table-panel commercial-panel">
     <h2>Ingresos por periodo y origen</h2>
-    <div className="form-grid">
-      <label>Desde<input type="month" name="from" value={options.from} onChange={change}/></label>
-      <label>Hasta<input type="month" name="to" value={options.to} onChange={change}/></label>
-      <label>Producto<select name="productId" value={options.productId} onChange={change}><option value="">Todos</option>{[...new Map(snapshot.sales.map(s=>[s.producto_id,s.nombre])).entries()].map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>
-      <label>Origen<select name="origin" value={options.origin} onChange={change}><option value="all">Todos, separados</option><option value="historico">Excel Hoja3</option><option value="operacion">Operaciones</option></select></label>
+    <div className="form-grid inventory-form">
+      <label>Desde<input aria-label="Desde" type="month" name="from" value={options.from} onChange={change}/></label>
+      <label>Hasta<input aria-label="Hasta" type="month" name="to" value={options.to} onChange={change}/></label>
+      <label>Producto<select aria-label="Producto" name="productId" value={options.productId} onChange={change}><option value="">Todos</option>{[...new Map(snapshot.sales.map(s=>[s.producto_id,s.nombre])).entries()].map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>
+      <label>Origen<select aria-label="Origen" name="origin" value={options.origin} onChange={change}><option value="all">Todos, separados</option><option value="historico">Excel Hoja3</option><option value="operacion">Operaciones</option></select></label>
       <label><input type="checkbox" name="includeTests" checked={options.includeTests} onChange={change}/> Incluir pruebas para validación</label>
     </div>
     <p>Ingresos históricos: {money(result.historicalTotal)} · Ingresos de operaciones: {money(result.operationalTotal)}. {options.includeTests?'Incluye pruebas.':'Pruebas excluidas.'}</p>

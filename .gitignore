@@ -45,3 +45,7 @@ private/
 *.xlsx
 *.xls
 *.sqlite
+
+# Python extraction caches
+__pycache__/
+*.pyc

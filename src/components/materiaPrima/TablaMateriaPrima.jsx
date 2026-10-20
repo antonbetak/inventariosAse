@@ -75,7 +75,7 @@ export const TablaMateriaPrima = ({
           icon={Wallet}
           title="Insumos al costo validado"
           detail="Valuación parcial; costos pendientes excluidos"
-          value={money(valorTotal)}
+          value={materia.some(i=>i.costo_pendiente||i.costo_unidad==null)?"Pendiente de información":money(valorTotal)}
         />
         <StatCard
           icon={TriangleAlert}

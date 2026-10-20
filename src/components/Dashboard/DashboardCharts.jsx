@@ -133,7 +133,7 @@ export const DashboardCharts = memo(function DashboardCharts({
         ) : (
           <EmptyState
             title="Tu próxima visión empieza aquí"
-            description="Registra inventario para visualizar su valor."
+            description="Se requieren costos de insumos validados y observaciones de inventario para visualizar su valor."
           />
         )}
         <div className="chart-footnote">

@@ -1,2 +1,2 @@
 import {api} from './api.js';
-export const dashboardService={getSnapshot:()=>api('planner'),toggleTask:id=>api(`planner/${id}`,'PATCH'),addTask:(title,priority='Media')=>api('planner','POST',{title,priority}),deleteTask:id=>api(`planner/${id}`,'DELETE')};
+export const dashboardService={getSnapshot:()=>api('planner'),toggleTask:id=>api(`planner/${id}`,'PATCH'),addTask:(title,priority='Media')=>api('planner','POST',{title,priority}),updateTask:(id,title,priority)=>api(`planner/${id}`,'PATCH',{title,priority}),addEvent:input=>api('planner/events','POST',input),updateEvent:(id,input)=>api(`planner/events/${id}`,'PATCH',input),deleteEvent:id=>api(`planner/events/${id}`,'DELETE'),deleteTask:id=>api(`planner/${id}`,'DELETE')};

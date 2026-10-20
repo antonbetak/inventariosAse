@@ -13,3 +13,9 @@ export function recoverDeployment(event, browser = window) {
   event.preventDefault();
   browser.location.reload();
 }
+
+export async function checkDeploymentVersion(current,request=fetch){
+ const response=await request('/version.json',{cache:'no-store'});
+ if(!response.ok)return false;
+ const version=await response.json();return typeof version.id==='string'&&version.id!==current;
+}

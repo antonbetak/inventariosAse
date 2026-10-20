@@ -1,11 +1,11 @@
 import {transaction} from './db.js';
-import {numeric,fail} from './security.js';
+import {numeric,fail,validDate} from './security.js';
 export async function saveCommercialData(input,user) {
   if(user.rol!=='admin')fail('Se requiere administrador.',403);
   return transaction(async c=>{
     await c.query('SELECT pg_advisory_xact_lock(735241)');
     if(input.kind==='loss-date') {
-      if(typeof input.fecha!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(input.fecha)||Number.isNaN(Date.parse(input.fecha))||new Date(input.fecha).toISOString().slice(0,10)!==input.fecha)fail('Captura una fecha real validada para la muestra.');
+      validDate(input.fecha);
       const r=await c.query('UPDATE merma_registro SET fecha=$1::date WHERE id=$2 RETURNING id',[input.fecha,numeric(input.id,'Muestra',{positive:true,integer:true})]);
       if(!r.rowCount)fail('Muestra no encontrada.',404);
     } else if(input.kind==='recipe') {

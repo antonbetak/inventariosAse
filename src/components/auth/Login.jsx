@@ -55,7 +55,6 @@ export const Login = ({ onLogin }) => {
       onLogin(session);
       setCargando(false);
     } catch (err) {
-      console.error("Error de login:", err);
       setError(err.message);
       setCargando(false);
     }

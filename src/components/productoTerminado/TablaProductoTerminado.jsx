@@ -53,7 +53,7 @@ export const TablaProductoTerminado = ({
         <StatCard
           icon={Wallet}
           title="Valor a precio de venta"
-          value={money(
+          value={salidas.some(p=>p.stock_pendiente)?"Conteo pendiente":money(
             salidas.reduce(
               (sum, p) =>
                 sum + (p.stock_pendiente ? 0 : Number(p.cantidad ?? 0) * Number(p.precioVenta ?? 0)),

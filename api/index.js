@@ -1,5 +1,7 @@
+import {planner} from '../server/planner.js';
+import {operationalData} from '../server/operational-data.js';
 import {saveCommercialData} from '../server/commercial-data.js';
-import {randomBytes,randomUUID} from 'node:crypto';
+import {randomBytes} from 'node:crypto';
 import {database} from '../server/db.js';
 import {hashToken,verifyPassword,checkOrigin,fail,required} from '../server/security.js';
 import {apiPath} from '../server/api-path.js';
@@ -20,7 +22,7 @@ export default async function handler(req,res){
     if(!body||typeof body!=='object'||Array.isArray(body))fail('Solicitud inválida.');
     if(Buffer.byteLength(JSON.stringify(body))>65536)fail('Solicitud demasiado grande.',413);
     const db=database();
-    if(path[0]==='session'&&method==='POST'){
+    if(path.length===1&&path[0]==='session'&&method==='POST'){
       const email=required(body.username,'Usuario',254).toLowerCase();
       // Persistent per-IP rate limits also work across serverless instances.
       const ip=hashToken(String(req.headers['x-forwarded-for']??req.socket?.remoteAddress??'unknown').split(',')[0]);
@@ -32,26 +34,21 @@ export default async function handler(req,res){
       const token=randomBytes(32).toString('hex');await db.query("INSERT INTO app_session(token_hash,user_id,expires_at) VALUES($1,$2,now()+interval '8 hours')",[hashToken(token),u.id]);await db.query('DELETE FROM login_attempt WHERE ip_hash=$1',[ip]);res.setHeader('Set-Cookie',cookie(token,28800));return send(200,{id:u.id,nombre:u.nombre,email:u.email,rol:u.rol});
     }
     const u=(await db.query('SELECT u.id,u.nombre,u.email,u.rol FROM app_session s JOIN app_user u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now() AND u.activo',[hashToken(tokenOf(req))])).rows[0];
-    if(path[0]==='session'&&method==='GET')return send(200,u??null);
+    if(path.length===1&&path[0]==='session'&&method==='GET')return send(200,u??null);
     if(!u)fail('Inicia sesión para continuar.',401);
-    if(path[0]==='session'&&method==='DELETE'){await db.query('DELETE FROM app_session WHERE token_hash=$1',[hashToken(tokenOf(req))]);res.setHeader('Set-Cookie',cookie('',0));return send(200,{ok:true});}
+    if(path.length===1&&path[0]==='session'&&method==='DELETE'){await db.query('DELETE FROM app_session WHERE token_hash=$1',[hashToken(tokenOf(req))]);res.setHeader('Set-Cookie',cookie('',0));return send(200,{ok:true});}
     if(path.length===1&&path[0]==='commercial-data'&&method==='POST')return send(200,await saveCommercialData(body,u));
-    if(path[0]==='inventory'&&method==='GET')return send(200,await snapshot());
-    if(path[0]==='recipe'&&method==='POST')return send(200,await recipe(body.name,body.quantity));
+    if(path.length===1&&path[0]==='inventory'&&method==='GET')return send(200,await snapshot());
+    if(path.length===1&&path[0]==='recipe'&&method==='POST')return send(200,await recipe(body.name,body.quantity));
     if(['raw-materials','finished-products'].includes(path[0])){
       const kind=path[0]==='raw-materials'?'raw':'product';
       const action=method==='DELETE'?'delete':path[2]==='entries'?'entry':path[2]==='sales'?'sale':path[2]==='production'?'production':'save';
-      if(!['POST','PATCH','DELETE'].includes(method)||path.length>3||(path[2]&&!['entries','sales','production'].includes(path[2]))||(path[2]&&method!=='POST')||(action==='entry'&&kind!=='raw')||(['sale','production'].includes(action)&&kind!=='product')||(method!=='POST'&&!path[1]))fail('Ruta inválida.',404);
+      if((path[2]&&!path[1])||!['POST','PATCH','DELETE'].includes(method)||path.length>3||(path[2]&&!['entries','sales','production'].includes(path[2]))||(path[2]&&method!=='POST')||(action==='entry'&&kind!=='raw')||(['sale','production'].includes(action)&&kind!=='product')||(method!=='POST'&&!path[1]))fail('Ruta inválida.',404);
       if(path[1]&&!/^\d+$/.test(path[1]))fail('Identificador inválido.');
       return send(200,await mutateInventory(kind,path[1],action,body,u));
     }
-    if(path[0]==='planner'){
-      if(method==='POST')await db.query('INSERT INTO tarea(id,user_id,title,priority) VALUES($1,$2,$3,$4)',[randomUUID(),u.id,required(body.title,'Tarea',120),['Alta','Media','Baja'].includes(body.priority)?body.priority:'Media']);
-      if(method==='PATCH')await db.query('UPDATE tarea SET completed=NOT completed WHERE id=$1 AND user_id=$2',[path[1],u.id]);
-      if(method==='DELETE')await db.query('DELETE FROM tarea WHERE id=$1 AND user_id=$2',[path[1],u.id]);
-      const tasks=(await db.query('SELECT id,title,priority,completed FROM tarea WHERE user_id=$1 ORDER BY title',[u.id])).rows;
-      const events=(await db.query('SELECT id,title,date::text,time,tipo FROM evento WHERE user_id=$1 ORDER BY date,time',[u.id])).rows;return send(200,{version:1,tasks,events});
-    }
+    if(path[0]==='planner')return send(200,await planner(path,method,body,u));
+    if(path.length===1&&path[0]==='operational-data'&&method==='POST')return send(200,await operationalData(body,u));
     return send(404,{error:'Ruta no encontrada.'});
   }catch(e){
     const status=e.status??(['23505','23514','22P02','22003','23503'].includes(e.code)?400:503);
