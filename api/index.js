@@ -1,6 +1,7 @@
 import {randomBytes,randomUUID} from 'node:crypto';
 import {database} from '../server/db.js';
 import {hashToken,verifyPassword,checkOrigin,fail,required} from '../server/security.js';
+import {apiPath} from '../server/api-path.js';
 import {snapshot,mutateInventory,recipe} from '../server/inventory.js';
 const cookieName=process.env.NODE_ENV==='production'?'__Host-sanate':'sanate_session';
 const tokenOf=req=>(req.headers.cookie??'').split(';').map(v=>v.trim()).find(v=>v.startsWith(cookieName+'='))?.slice(cookieName.length+1)??'';
@@ -9,7 +10,7 @@ export default async function handler(req,res){
   res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
   const send=(status,data)=>{res.statusCode=status;res.setHeader('Content-Type','application/json');res.end(JSON.stringify(data));};
   try {
-    const path=new URL(req.url,'http://localhost').pathname.replace(/^\/api\/?/,'').split('/').filter(Boolean);
+    const path=apiPath(req);
     const method=req.method;
     if(!['GET','POST','PATCH','DELETE'].includes(method))return send(405,{error:'Método no permitido.'});
     if(method!=='GET')checkOrigin(req);

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {passwordHash,verifyPassword,hashToken,numeric,checkOrigin} from '../server/security.js';
-import handler from '../api/[...path].js';
+import handler from '../api/index.js';
 test('Contraseñas: sal aleatoria, verificación y rechazo de credenciales incorrectas',()=>{
  const a=passwordHash('test-password-8392'),b=passwordHash('test-password-8392');assert.notEqual(a,b);assert.ok(verifyPassword('test-password-8392',a));assert.equal(verifyPassword('incorrecta',a),false);assert.equal(verifyPassword('x'.repeat(257),a),false);assert.throws(()=>passwordHash('corta'));assert.equal(hashToken('session').length,64);
 });

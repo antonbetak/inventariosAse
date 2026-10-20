@@ -75,3 +75,5 @@ Se corrigió el contrato de productos para que la tabla acepte productos SQL sin
 La fila 35 de Hoja2 es la fuente del stock de insumos. Las muestras de merma (filas 48–49) son observaciones sin fecha y no sustituyen ese inventario. Los totales semanales de Producto Terminado de Hoja3 son parte de la planeación julio–diciembre, no un conteo físico actual. Esta corrección no cambia cantidades importadas ni ejecuta migraciones.
 
 Preview configurada con conexión development privada y APP_ORIGIN igual al alias de la rama. Se confirmó en logs GET /api/session 200, inventario sin sesión 401 y credenciales incorrectas 401. Primer administrador creado por mecanismo privado con contraseña definida por el usuario. Producción no se modificó.
+
+La Preview reveló que la función con nombre `[...path].js` no atendía rutas anidadas en este despliegue Vercel. Se sustituyó por una entrada `api/index.js` y un rewrite explícito de `/api/:path*`, manteniendo las mismas comprobaciones de sesión y Origin. Se verifican las rutas con identificador después del despliegue; una consulta inicial exitosa no valida las operaciones de escritura.

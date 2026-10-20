@@ -1,5 +1,5 @@
 import {createServer} from 'node:http';
-import handler from '../api/[...path].js';
+import handler from '../api/index.js';
 try{process.loadEnvFile('.env.local');}catch{/* Environment may be supplied by the host. */}
 createServer(async(req,res)=>{
   let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>65536){res.writeHead(413);res.end();return;}}
