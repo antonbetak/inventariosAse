@@ -28,7 +28,7 @@ try {
       const unit=(await c.query('INSERT INTO unidad_medida(nombre,abreviatura) VALUES($1,$1) ON CONFLICT(nombre) DO UPDATE SET nombre=excluded.nombre RETURNING id',[item.unidad])).rows[0];
       await c.query('UPDATE insumo SET precio_presentacion=$1,cantidad_presentacion=$2,unidad_id=$3,costo_pendiente=false,descripcion=$4 WHERE id=$5',[price,size,unit.id,item.descripcion,row.id]);
       await c.query('UPDATE parametro_inventario SET inventario_actual=$1,stock_minimo_manual=$2 WHERE insumo_id=$3',[qty,minimum,row.id]);
-      if(qty!==Number(row.inventario_actual))await c.query("INSERT INTO movimiento(id,insumo_id,nombre,tipo,entidad,cantidad,unidad,valor,descripcion,user_id,es_prueba,valor_conocido) VALUES($1,$2,$3,'ajuste','materia',$4,$5,$6,$7,$8,false,true)",[randomUUID(),row.id,row.nombre,qty-Number(row.inventario_actual),item.unidad,(qty-Number(row.inventario_actual))*price/size,'Conciliación de existencias con Excel y usuario',admin.id]);
+      if(qty!==Number(row.inventario_actual))await c.query("INSERT INTO movimiento(id,insumo_id,nombre,tipo,entidad,cantidad,unidad,valor,descripcion,user_id,es_prueba,valor_conocido) VALUES($1,$2,$3,'ajuste','materia',$4,$5,$6,$7,$8,false,true)",[randomUUID(),row.id,row.nombre,qty-Number(row.inventario_actual),item.unidad,(qty-Number(row.inventario_actual))*price/size,'Ajuste de existencias iniciales',admin.id]);
     }
     for(const item of input.productos??[]){
       const rows=(await c.query(`SELECT * FROM producto WHERE nombre=$1 AND activo AND NOT es_prueba ${apply?'FOR UPDATE':''}`,[item.nombre])).rows;
@@ -36,7 +36,7 @@ try {
       const row=rows[0];before.productos.push(row);
       if(Number(row.cantidad)!==Number(item.stock_esperado))throw Error(`Stock cambió: ${item.nombre}`);
       const qty=numeric(item.cantidad,'Existencias de producto',{integer:true});after.productos.push({id:row.id,nombre:row.nombre,cantidad:qty,stock_confirmado:true});
-      if(apply){await c.query('UPDATE producto SET cantidad=$1,stock_confirmado=true WHERE id=$2',[qty,row.id]);await c.query("INSERT INTO movimiento(id,producto_id,nombre,tipo,entidad,cantidad,unidad,valor,descripcion,user_id,es_prueba,valor_conocido) VALUES($1,$2,$3,'ajuste','producto',$4,$5,$6,'Conteo inicial confirmado por el usuario',$7,false,true)",[randomUUID(),row.id,row.nombre,qty-Number(row.cantidad),row.unidad,(qty-Number(row.cantidad))*Number(row.precio_venta),admin.id]);}
+      if(apply){await c.query('UPDATE producto SET cantidad=$1,stock_confirmado=true WHERE id=$2',[qty,row.id]);await c.query("INSERT INTO movimiento(id,producto_id,nombre,tipo,entidad,cantidad,unidad,valor,descripcion,user_id,es_prueba,valor_conocido) VALUES($1,$2,$3,'ajuste','producto',$4,$5,$6,'Inventario inicial de producto terminado',$7,false,true)",[randomUUID(),row.id,row.nombre,qty-Number(row.cantidad),row.unidad,(qty-Number(row.cantidad))*Number(row.precio_venta),admin.id]);}
     }
     if(apply){await c.query('INSERT INTO conciliacion_excel(id,archivo_hash,criterio,antes,despues) VALUES($1,$2,$3,$4,$5)',[input.id,input.hash,input.criterio,JSON.stringify(before),JSON.stringify(after)]);await captureHistory(c);}
     return {aplicado:apply,insumos:after.insumos.length,productos:after.productos.length,detalle:after};
