@@ -1,7 +1,7 @@
 """Read-only extractor for the supplied workbook; uses only Python's standard library.
 All nonempty cells and formulas of sheets 2/3 are retained for auditability.
 """
-import sys, json, zipfile, hashlib, xml.etree.ElementTree as ET
+import sys, json, zipfile, hashlib, re, xml.etree.ElementTree as ET
 from decimal import Decimal
 from pathlib import Path
 
@@ -10,7 +10,7 @@ def extract(filename, year):
     ns={'m':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
     strings=[''.join(t.itertext()) for t in ET.fromstring(z.read('xl/sharedStrings.xml')).findall('m:si',ns)]
     sheets=[]; cells=[]
-    for num in (2,3):
+    for num in (1,2,3):
         data={}
         for c in ET.fromstring(z.read(f'xl/worksheets/sheet{num}.xml')).findall('.//m:c',ns):
             v=c.find('m:v',ns); f=c.find('m:f',ns)
@@ -18,12 +18,25 @@ def extract(filename, year):
             value=v.text or ''
             if c.get('t')=='s':value=strings[int(value)]
             data[c.get('r')]=value
-            cells.append({'hoja':f'Hoja{num}','celda':c.get('r'),'valor':value,'formula':f.text if f is not None else None})
+            cells.append({'hoja':'Hoja 1' if num==1 else f'Hoja{num}','celda':c.get('r'),'valor':value,'formula':f.text if f is not None else None})
         sheets.append(data)
-    s,t=sheets
+    base,s,t=sheets
     cols=['B','H','N','T','Z','AF','AL','AR','AX','BD','BJ','BP','BV','CB','CH','CN','CT']
     vals=['C','J','P','V','AB','AH','AN','AT','AZ','BF','BL','BR','BX','CD','CJ','CP','CV']
     insumos=[{'nombre':s[c+'11'],'demanda':s[v+'13'],'entrega':s[v+'14'],'revision':s[v+'30'],'stock':s[v+'35'],'z':'1.64','nivel':'.95','desv':'.15'} for c,v in zip(cols,vals)]
+    results=['G','M','S','Y','AE','AK','AQ','AW','BC','BI','BO','BU','CA','CG','CM','CS','CY']
+    presentation=[1,1000,1000,1,1,1,1000,1,1,1,100,50,150,190,200,40,170]
+    units=['pzas','pzas','pzas','gal','gal','bulto','pzas','L','servicio','pzas','pzas','pzas','pzas','pzas','pzas','pzas','pzas']
+    for index,item in enumerate(insumos):
+        row=index+3; col=results[index]
+        price=re.search(r'\d+(?:\.\d+)?',base[f'D{row}'])
+        if not price: raise ValueError(f'Costo no identificado en Hoja 1!D{row}')
+        item.update({'stock_seguridad':s[col+'13'],'punto_reorden_fuente':s[col+'16'],
+                     'pedido_fuente':s[col+'32'],'precio_presentacion':price.group(),
+                     'cantidad_presentacion':presentation[index],'unidad':units[index],
+                     'descripcion':base[f'B{row}'],'fuente':{'stock':f'Hoja2!{vals[index]}35',
+                     'seguridad':f'Hoja2!{col}13','reorden':f'Hoja2!{col}16','pedido':f'Hoja2!{col}32',
+                     'costo':f'Hoja 1!D{row}'}})
     # The water/base model contains no dates for the loss samples. Preserve NULL dates.
     loss=[('Garrafones','C'),('Tapas #54 cintillo','I'),('Tapas #56 sin cintillo','P'),('Cofias','V'),('Cubrebocas','AB'),('Botellas de Agua 1 litro','AH'),('Botellas de Agua Medio litro','AN'),('Tapas de agua mini','AT')]
     losses=[{'nombre':name,'inicial':s[col+'48'],'final':s[col+'49']} for name,col in loss]

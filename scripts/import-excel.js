@@ -13,7 +13,12 @@ try{
   await c.query('INSERT INTO importacion(id,archivo_hash,anio) VALUES($1,$2,$3)',[importId,data.hash,data.anio]);
   const unit=(await c.query("INSERT INTO unidad_medida(nombre,abreviatura) VALUES('Unidad pendiente de validar','s/d') RETURNING id")).rows[0].id;
   const ids=new Map();
-  for(const i of data.insumos){const id=(await c.query('INSERT INTO insumo(nombre,unidad_id,consumo_prom,periodo_consumo) VALUES($1,$2,$3,\'diario\') RETURNING id',[i.nombre,unit,i.demanda])).rows[0].id;ids.set(i.nombre,id);await c.query('INSERT INTO parametro_inventario(insumo_id,demanda_diaria,tiempo_entrega_dias,nivel_servicio,pct_desv_demanda,tiempo_revision_dias,inventario_actual) VALUES($1,$2,$3,$4,$5,$6,$7)',[id,i.demanda,i.entrega,i.nivel,i.desv,i.revision,i.stock]);}
+  for(const i of data.insumos){
+    const unitId=i.unidad?(await c.query('INSERT INTO unidad_medida(nombre,abreviatura) VALUES($1,$1) ON CONFLICT(nombre) DO UPDATE SET nombre=excluded.nombre RETURNING id',[i.unidad])).rows[0].id:unit;
+    const id=(await c.query("INSERT INTO insumo(nombre,unidad_id,consumo_prom,periodo_consumo,precio_presentacion,cantidad_presentacion,costo_pendiente,descripcion) VALUES($1,$2,$3,'diario',$4,$5,$6,$7) RETURNING id",[i.nombre,unitId,i.demanda,i.precio_presentacion??null,i.cantidad_presentacion??1,i.precio_presentacion==null||!i.unidad,i.descripcion??''])).rows[0].id;
+    ids.set(i.nombre,id);
+    await c.query('INSERT INTO parametro_inventario(insumo_id,demanda_diaria,tiempo_entrega_dias,nivel_servicio,pct_desv_demanda,tiempo_revision_dias,inventario_actual,stock_minimo_manual) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[id,i.demanda,i.entrega,i.nivel,i.desv,i.revision,i.stock,i.stock_seguridad??null]);
+  }
   for(const m of data.mermas)await c.query('INSERT INTO merma_registro(insumo_id,cantidad_inicial,cantidad_final,periodo_fuente,importacion_id) VALUES($1,$2,$3,$4,$5)',[ids.get(m.nombre),m.inicial,m.final,'Hoja2 filas 48–49, sin fecha',importId]);
   const products=new Map();
   for(const p of data.productos){const id=(await c.query('INSERT INTO producto(nombre,litros_unidad,precio_venta) VALUES($1,$2,$3) RETURNING id',[p.nombre,p.litros,p.precio])).rows[0].id;products.set(p.nombre,id);}

@@ -8,6 +8,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { reportsService } from "../../services/reportsService";
+import { quantity } from '../../utils/inventoryDisplay';
 import { downloadReport } from "../../utils/downloadReport";
 import {
   BarChart,
@@ -94,15 +95,15 @@ export const Reportes = ({ reports, snapshot }) => {
         />
         <StatCard
           icon={Wallet}
-          title="Insumos al costo validado"
-          value={reports.rawValueComplete?formatCurrency(reporteCompleto.valorTotal):"Pendiente de información"}
-          detail="Valuación parcial; costos pendientes excluidos"
+          title="Valor de materia prima"
+          value={reports.rawValueComplete?formatCurrency(reporteCompleto.valorTotal):"—"}
+          detail="Existencias × costo por unidad"
         />
         <StatCard
           icon={ArrowDownLeft}
           title="Salidas registradas"
           value={resumenSalidas.registros}
-          detail={resumenSalidas.valor==null?"Valuación pendiente":`Valor declarado: ${formatCurrency(resumenSalidas.valor)}`}
+          detail={resumenSalidas.valor==null?"Movimientos del inventario":`Valor declarado: ${formatCurrency(resumenSalidas.valor)}`}
           tone="violet"
         />
         <StatCard
@@ -139,7 +140,7 @@ export const Reportes = ({ reports, snapshot }) => {
         <GlassCard className="merma-panel">
           <SectionHeader
             title="Muestras de merma"
-            description="Muestras fuente sin periodo mensual confirmado"
+            description="Pérdida de material por muestra"
           />
           {topMerma.length ? (
             topMerma.map((i, index) => (
@@ -155,7 +156,7 @@ export const Reportes = ({ reports, snapshot }) => {
                     />
                   </div>
                 </div>
-                <span>{i.merma_mensual==null?"Pendiente":`${(i.merma_mensual * 100).toFixed(2)}%`}</span>
+                <span>{i.merma_mensual==null?"—":`${(i.merma_mensual * 100).toFixed(2)}%`}</span>
               </div>
             ))
           ) : (
@@ -197,7 +198,7 @@ export const Reportes = ({ reports, snapshot }) => {
           headers={[
             "Insumo",
             "Stock",
-            "Mínimo (SS)",
+            "Seguridad (SS)",
             "Reorden (R)",
             "Consumo prom.",
             "Costo",
@@ -211,14 +212,14 @@ export const Reportes = ({ reports, snapshot }) => {
                 <strong>{i.nombre}</strong>
               </td>
               <td>
-                {i.stock_actual}{" "}
+                {quantity(i.stock_actual)}{" "}
                 <span className="muted">{i.unidad_medida}</span>
               </td>
-              <td>{i.stock_minimo}</td>
-              <td>{i.punto_reorden}</td>
-              <td>{i.consumo_promedio || "—"}</td>
-              <td>{i.costo_pendiente || i.costo_unidad == null ? "Pendiente" : formatCurrency(i.costo_unidad)}</td>
-              <td>{i.merma_mensual==null?"Pendiente":`${(i.merma_mensual * 100).toFixed(2)}%`}</td>
+              <td>{quantity(i.stock_minimo)}</td>
+              <td>{quantity(i.punto_reorden)}</td>
+              <td>{quantity(i.consumo_promedio)}</td>
+              <td>{i.costo_pendiente || i.costo_unidad == null ? "—" : formatCurrency(i.costo_unidad)}</td>
+              <td>{i.merma_mensual==null?"—":`${(i.merma_mensual * 100).toFixed(2)}%`}</td>
               <td>
                 <span
                   className={`status-badge ${i.enRiesgo ? "low" : "healthy"}`}

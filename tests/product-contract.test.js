@@ -8,7 +8,7 @@ test('Productos SQL sin fecha ni conteo físico se pueden listar sin fabricar ex
   const products=rows.map(productDto);
   assert.deepEqual(sortProducts(products).map(p=>p.id),['1','2']);
   assert.equal(dateLabel(products[0].creadoEn),'Sin fecha registrada');
-  assert.equal(stockStatus({...products[0],stock_actual:products[0].cantidad}),'Por confirmar');
+  assert.equal(stockStatus({...products[0],stock_actual:products[0].cantidad}),null);
   assert.equal(products[1].cantidad,3);
   assert.equal(products[1].creadoEn,'2026-01-02T12:00:00.000Z');
   assert.deepEqual(products[0].insumos,[]);

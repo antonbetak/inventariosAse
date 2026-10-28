@@ -10,7 +10,7 @@ import { FilterTabs } from "../ui/FilterTabs";
 import { StatusBadge } from "../ui/StatusBadge";
 import { DataTable } from "../ui/DataTable";
 import { EmptyState } from "../ui/EmptyState";
-import { money, dateLabel, stockStatus, sortProducts } from "../../utils/inventoryDisplay";
+import { money, stockStatus, sortProducts } from "../../utils/inventoryDisplay";
 
 export const TablaProductoTerminado = ({
   salidas: allSalidas = [],
@@ -18,8 +18,7 @@ export const TablaProductoTerminado = ({
   onEdit,
   onDelete,
 }) => {
-  const [includeTests,setIncludeTests] = useState(false);
-  const salidas = allSalidas.filter(p=>includeTests||!p.es_prueba);
+  const salidas = allSalidas.filter(p=>!p.es_prueba);
   const [filter, setFilter] = useState("Todos");
   const [search, setSearch] = useState("");
   const filtered = sortProducts(salidas)
@@ -35,7 +34,7 @@ export const TablaProductoTerminado = ({
     <>
       <PageHeader
         title="Producto terminado"
-        description="Consulta las existencias confirmadas de cada producto."
+        description="Consulta y administra las existencias de tus productos."
       >
         <GlassButton onClick={onAdd}>
           <Plus size={18} />
@@ -47,24 +46,22 @@ export const TablaProductoTerminado = ({
           icon={PackageCheck}
           title="Productos registrados"
           value={salidas.length}
-          detail={includeTests ? "Incluye pruebas; costo contable pendiente" : "Pruebas excluidas; costo contable pendiente"}
+          detail="Catálogo de productos"
           tone="teal"
         />
         <StatCard
           icon={Wallet}
           title="Valor a precio de venta"
-          value={salidas.some(p=>p.stock_pendiente)?"Conteo pendiente":money(
+          value={salidas.some(p=>p.stock_pendiente)?"—":money(
             salidas.reduce(
               (sum, p) =>
                 sum + (p.stock_pendiente ? 0 : Number(p.cantidad ?? 0) * Number(p.precioVenta ?? 0)),
               0,
             ),
           )}
-          detail={salidas.some(p => p.stock_pendiente) ? "Valuación parcial · existencias por confirmar" : "Cantidad × precio de venta"}
+          detail="Cantidad × precio de venta"
         />
       </div>
-      {salidas.some(p => p.stock_pendiente) && <p className="form-info" role="status">El Excel contiene ventas históricas y producción proyectada, pero no un conteo físico actual de producto terminado. Confirma las existencias en Editar antes de registrar ventas o producción.</p>}
-      <label><input type="checkbox" checked={includeTests} onChange={e=>setIncludeTests(e.target.checked)}/> Incluir registros de prueba</label>
       <GlassCard className="table-panel">
         <div className="table-toolbar">
           <SearchInput
@@ -75,7 +72,7 @@ export const TablaProductoTerminado = ({
           <FilterTabs
             value={filter}
             onChange={setFilter}
-            options={["Todos", "Disponible", "Bajo", "Crítico", "Por confirmar"]}
+            options={["Todos", "Disponible", "Bajo", "Crítico"]}
           />
         </div>
         <DataTable
@@ -85,8 +82,7 @@ export const TablaProductoTerminado = ({
             "Descripción",
             "Cantidad",
             "Precio de venta",
-            "Primer movimiento",
-            "Estado",
+                        "Estado",
             "Acciones",
           ]}
         >
@@ -105,11 +101,10 @@ export const TablaProductoTerminado = ({
                   "—"}
               </td>
               <td className="numeric">
-                {item.stock_pendiente ? "Por confirmar" : <>{item.cantidad} <span className="muted">{item.unidad}</span></>}
+                {item.stock_pendiente ? "—" : <>{item.cantidad} <span className="muted">{item.unidad}</span></>}
               </td>
               <td className="numeric">{money(item.precioVenta)}</td>
-              <td className="muted">{dateLabel(item.creadoEn)}</td>
-              <td>
+                            <td>
                 <StatusBadge
                   status={stockStatus({ ...item, stock_actual: item.cantidad })}
                 />

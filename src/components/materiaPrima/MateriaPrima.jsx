@@ -135,7 +135,7 @@ export function MateriaPrima({
             <div className="form-grid">
               {[
                 ["stock_actual", "Stock actual"],
-                ["stock_minimo", "Stock mínimo"],
+                ["stock_minimo", "Stock de seguridad"],
                 ["costo_unidad", "Costo por unidad (MXN)"],
                 ["consumo_promedio", "Consumo promedio diario"],
               ].map(([name, label]) => (
@@ -154,8 +154,6 @@ export function MateriaPrima({
                 </div>
               ))}
             </div>
-            <p className="form-info">Deja el costo vacío si está pendiente. La unidad s/d debe validarse antes de operar.</p>
-            {!materia && <label><input type="checkbox" checked={form.es_prueba === true} onChange={e=>setForm({...form,es_prueba:e.target.checked})} /> Registro de prueba (clasificación permanente)</label>}
             <div>
               <label htmlFor="raw-provider">Proveedor</label>
               <input

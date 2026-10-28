@@ -40,9 +40,9 @@ El servidor local de Vite envía `/api` a `127.0.0.1:3001`.
 
 ## Base de datos
 
-Las migraciones 001–005 se ejecutan explícitamente mediante `npm run db:migrate`, exclusivamente con las guardas development/host verificadas. Las versiones aplicadas se consultan en `schema_migration`; no se repiten ni se ejecutan en el build. La 004 añade confirmación explícita de stock, evidencia de valuación, costos por lote, gastos y merma operativa. Conserva las celdas fuente y las ventas históricas. La 005 amplía costos unitarios y de lote a seis decimales para evitar redondeos silenciosos; precios de venta y gastos admiten centavos.
+Las migraciones 001–006 se ejecutan explícitamente mediante `npm run db:migrate`, exclusivamente con las guardas development/host verificadas. Las versiones aplicadas se consultan en `schema_migration`; no se repiten ni se ejecutan en el build. La 004 añade confirmación explícita de stock, evidencia de valuación, costos por lote, gastos y merma operativa. Conserva las celdas fuente y las ventas históricas. La 005 amplía costos unitarios y de lote a seis decimales para evitar redondeos silenciosos; precios de venta y gastos admiten centavos.
 
-La importación privada utiliza solamente Hoja2 y Hoja3. **La base existente ya está importada: no volver a importarla como parte del arranque o despliegue.** El importador es transaccional e idempotente para archivo/año; un archivo distinto exige conciliación. La auditoría independiente puede ejecutarse sin modificar el Excel:
+La importación privada utiliza Hoja 1 para costos y presentaciones, Hoja2 para parámetros de inventario y Hoja3 para ventas y proyecciones. **La base existente ya está importada: no volver a importarla como parte del arranque o despliegue.** El importador es transaccional e idempotente para archivo/año; un archivo distinto exige conciliación. La auditoría independiente puede ejecutarse sin modificar el Excel:
 
 ```sh
 python3 scripts/audit-sales.py private/reference.xlsx private/sales-audit.json
@@ -107,3 +107,9 @@ Configura conexión development y APP_ORIGIN privado igual al alias exacto. Cons
 Hay recuperación acotada de imports fallidos, una pantalla de error con recarga y aviso de versión nueva que permite guardar formularios antes de actualizar. Una operación con respuesta de red incierta debe comprobarse antes de repetirla; no se reenvían mutaciones automáticamente.
 
 Consulta [ENTREGA_FINAL](docs/ENTREGA_FINAL.md) para evidencia y límites, y [SQL_IMPLEMENTATION](docs/SQL_IMPLEMENTATION.md) para evolución técnica. Producción requiere autorización separada: no se hace merge, promoción ni migración de production en este flujo.
+
+## Conciliación de existencias
+
+El extractor conserva por separado inventario I, seguridad SS, punto de reorden R y pedido q. Los costos por presentación se convierten a costo por unidad. Una corrección de existencias requiere un manifiesto privado explícito; `node scripts/reconcile-excel.js private/conciliacion.json` permite revisarlo y `--apply` lo aplica una sola vez, con control de cambios concurrentes, movimientos de ajuste y respaldo del antes/después en `conciliacion_excel`. No reimporta ventas ni proyecciones.
+
+La interfaz operativa excluye registros de prueba de tablas, selectores, reportes y formularios. Las existencias cero confirmadas se muestran como cero; los campos ausentes se muestran con un guion.

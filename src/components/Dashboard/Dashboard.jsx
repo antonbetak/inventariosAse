@@ -20,6 +20,7 @@ import { EmptyState } from "../ui/EmptyState";
 import { StatusBadge } from "../ui/StatusBadge";
 import {
   money,
+  quantity,
   stockStatus,
   recordDate,
   dateLabel,
@@ -73,22 +74,22 @@ export const Dashboard = memo(function Dashboard({
       <div className="stats-grid">
         <StatCard
           icon={Wallet}
-          title="Insumos al costo validado"
-          value={reports.rawValueComplete?money(rawValue):"Pendiente de información"}
-          detail="Valuación parcial: faltan costos de insumos"
+          title="Valor de materia prima"
+          value={reports.rawValueComplete?money(rawValue):"—"}
+          detail="Existencias × costo por unidad"
         />
         <StatCard
           icon={Boxes}
           title="Materia prima"
-          value={reports.rawValueComplete?money(rawValue):"Pendiente de información"}
+          value={materiaPrima.length}
           detail={`${materiaPrima.length} insumos registrados`}
           tone="teal"
         />
         <StatCard
           icon={PackageCheck}
           title="Productos a precio de venta"
-          value={reports.productValueComplete?money(productValue):"Conteo pendiente"}
-          detail={`${products.length} productos; costo contable pendiente`}
+          value={reports.productValueComplete?money(productValue):"—"}
+          detail={`${products.length} productos registrados`}
           tone="violet"
         />
         <StatCard
@@ -101,10 +102,9 @@ export const Dashboard = memo(function Dashboard({
       </div>
       <div className="stats-grid three">
         <StatCard icon={Wallet} title="Ingresos históricos · Excel" value={money(reports.sales.historicalTotal)} detail={reports.sales.historicalPeriod} />
-        <StatCard icon={PackageCheck} title="Ingresos de operaciones" value={money(reports.sales.operationalTotal)} detail={`${reports.sales.operationalPeriod}; pruebas excluidas`} />
+        <StatCard icon={PackageCheck} title="Ingresos de operaciones" value={money(reports.sales.operationalTotal)} detail={reports.sales.operationalPeriod} />
         <StatCard icon={TriangleAlert} title="Merma proyectada de agua" value={money(reports.projectedLossCost??0)} detail="Planeación julio–diciembre; no es gasto real" />
       </div>
-      <p className="form-info">Utilidad pendiente de calcular: faltan costos validados, recetas reales y costos de producción. Consulta periodos y orígenes en Reportes.</p>
       <DashboardCharts
         history={reports.history}
         healthy={healthy}
@@ -132,8 +132,8 @@ export const Dashboard = memo(function Dashboard({
                   <div className="item-copy">
                     <strong>{m.nombre || "Sin nombre"}</strong>
                     <small>
-                      {m.stock_actual ?? 0} {m.unidad_medida} disponibles ·
-                      mínimo {m.stock_minimo ?? 0}
+                      {quantity(m.stock_actual)} {m.unidad_medida} disponibles ·
+                      seguridad {quantity(m.stock_minimo)}
                     </small>
                     <div className="stock-track">
                       <span

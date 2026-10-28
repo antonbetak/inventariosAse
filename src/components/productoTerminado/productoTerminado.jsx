@@ -159,8 +159,6 @@ export function ProductoTerminado({
             maxLength={600}
           />
         </div>
-        {producto?.stock_pendiente && <p className="form-info">Existencias por confirmar. Deja la cantidad vacía para conservar ese estado; captura un conteo físico explícito para confirmarlas.</p>}
-        {!producto && <label><input type="checkbox" checked={form.es_prueba === true} onChange={e=>setForm({...form,es_prueba:e.target.checked})} /> Registro de prueba (clasificación permanente)</label>}
         {!producto && (
           <>
             <h3>

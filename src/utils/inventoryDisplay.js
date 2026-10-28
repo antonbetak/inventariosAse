@@ -4,8 +4,10 @@ export const money = (value) =>
     currency: "MXN",
     maximumFractionDigits: 2,
   });
+export const quantity = (value) =>
+  Number(value ?? 0).toLocaleString('es-MX', { maximumFractionDigits: 3 });
 export const stockStatus = (item) =>
-  item.stock_pendiente ? "Por confirmar" : Number(item.stock_actual ?? 0) <= 0
+  item.stock_pendiente ? null : Number(item.stock_actual ?? 0) <= 0
     ? "Crítico"
     : Number(item.stock_actual) <= Number(item.stock_minimo ?? 0)
       ? "Bajo"
