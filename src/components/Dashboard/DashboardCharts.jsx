@@ -41,9 +41,9 @@ export const DashboardCharts = memo(function DashboardCharts({
       <GlassCard className="value-chart">
         <SectionHeader
           title="Evolución del inventario"
-          description="Valor total del inventario · MXN"
+          description="Valor de las existencias de materia prima · MXN"
         >
-          <span className="subtle-badge">VALOR TOTAL</span>
+          <span className="subtle-badge">MATERIA PRIMA</span>
         </SectionHeader>
         <FilterTabs
           options={["7 días", "30 días", "90 días"]}
@@ -121,7 +121,7 @@ export const DashboardCharts = memo(function DashboardCharts({
                 />
                 <Area
                   type="monotone"
-                  dataKey="total"
+                  dataKey="materiaPrima"
                   stroke="var(--accent-primary)"
                   strokeWidth={2.5}
                   fill="url(#inventoryArea)"
@@ -132,14 +132,14 @@ export const DashboardCharts = memo(function DashboardCharts({
           </div>
         ) : (
           <EmptyState
-            title="Tu próxima visión empieza aquí"
-            description="Registra inventario para visualizar su valor."
+            title="Sin historial de inventario"
+            description="Los cambios de valor aparecerán al registrar movimientos."
           />
         )}
         <div className="chart-footnote">
           <span className="legend-dot blue" />
-          Valor total
-          <span className="muted">Insumos y productos</span>
+          Valor al costo
+          <span className="muted">Insumos comerciales</span>
         </div>
       </GlassCard>
       <GlassCard className="stock-panel">

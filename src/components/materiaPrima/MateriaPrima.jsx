@@ -22,6 +22,7 @@ export function MateriaPrima({
       merma_mensual: 0,
     },
     ...materia,
+    ...(materia?.costo_pendiente ? {costo_unidad: ""} : {}),
   }));
   const [selected, setSelected] = useState(""),
     [quantity, setQuantity] = useState(""),
@@ -112,9 +113,9 @@ export function MateriaPrima({
                   list="raw-categories"
                 />
                 <datalist id="raw-categories">
-                  <option>Ingredientes</option>
+                  <option>Insumos</option>
                   <option>Empaque</option>
-                  <option>Fragancias</option>
+                  <option>Limpieza</option>
                 </datalist>
               </div>
               <div>
@@ -125,7 +126,7 @@ export function MateriaPrima({
                   value={form.unidad_medida}
                   onChange={change}
                 >
-                  {["kg", "L", "g", "ml", "pzas", "cajas"].map((u) => (
+                  {["s/d", "kg", "L", "g", "ml", "pzas", "cajas"].map((u) => (
                     <option key={u}>{u}</option>
                   ))}
                 </select>
@@ -134,7 +135,7 @@ export function MateriaPrima({
             <div className="form-grid">
               {[
                 ["stock_actual", "Stock actual"],
-                ["stock_minimo", "Stock mínimo"],
+                ["stock_minimo", "Stock de seguridad"],
                 ["costo_unidad", "Costo por unidad (MXN)"],
                 ["consumo_promedio", "Consumo promedio diario"],
               ].map(([name, label]) => (
@@ -146,7 +147,7 @@ export function MateriaPrima({
                     type="number"
                     min="0"
                     step="any"
-                    required
+                    required={name !== "costo_unidad"}
                     value={form[name]}
                     onChange={change}
                   />

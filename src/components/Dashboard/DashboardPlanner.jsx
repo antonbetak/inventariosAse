@@ -7,12 +7,13 @@ import {
   Plus,
   Trash2,
   Clock3,
+  Pencil,
 } from "lucide-react";
 import { GlassCard } from "../ui/GlassCard";
 import { SectionHeader } from "../ui/PageHeader";
 import { dashboardService } from "../../services/dashboardService";
 import { STORAGE_KEYS } from "../../services/storage";
-import { dateKey } from "../../data/mockDashboard";
+const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
 
 export const DashboardPlanner = memo(function DashboardPlanner() {
   const [today] = useState(() => new Date());
@@ -24,6 +25,8 @@ export const DashboardPlanner = memo(function DashboardPlanner() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [title, setTitle] = useState("");
+  const [editingTask,setEditingTask] = useState(null);
+  const [eventForm,setEventForm] = useState({id:null,title:"",time:""});
   const [priority, setPriority] = useState("Media");
   useEffect(() => {
     let active = true;
@@ -165,7 +168,7 @@ export const DashboardPlanner = memo(function DashboardPlanner() {
                 aria-current={key === dateKey(today) ? "date" : undefined}
                 aria-pressed={selected === key}
                 aria-label={label}
-                onClick={() => setSelected(key)}
+                onClick={() => {setSelected(key);setEventForm({id:null,title:"",time:""});}}
               >
                 {day}
                 {count > 0 && <i />}
@@ -192,10 +195,18 @@ export const DashboardPlanner = memo(function DashboardPlanner() {
               <div>
                 <strong>{e.title}</strong>
                 <small>{e.category}</small>
+                <button className="icon-button" aria-label={`Editar recordatorio: ${e.title}`} disabled={busy} onClick={()=>setEventForm({id:e.id,title:e.title,time:e.time})}><Pencil size={14}/></button>
+                <button className="icon-button" aria-label={`Eliminar recordatorio: ${e.title}`} disabled={busy} onClick={()=>mutate(()=>dashboardService.deleteEvent(e.id))}><Trash2 size={14}/></button>
               </div>
             </div>
           ))}
         </div>
+        <form className="inventory-form operational-form" onSubmit={async e=>{e.preventDefault();const input={title:eventForm.title,time:eventForm.time,date:selected};if(await mutate(()=>eventForm.id?dashboardService.updateEvent(eventForm.id,input):dashboardService.addEvent(input)))setEventForm({id:null,title:"",time:""});}}>
+          <label>Recordatorio para {selected}<input aria-label="Título del recordatorio" required maxLength={120} value={eventForm.title} onChange={e=>setEventForm({...eventForm,title:e.target.value})}/></label>
+          <label>Hora (opcional)<input aria-label="Hora del recordatorio" type="time" value={eventForm.time} onChange={e=>setEventForm({...eventForm,time:e.target.value})}/></label>
+          <button className="button button-primary" disabled={busy||!data}>{eventForm.id?'Guardar recordatorio':'Agregar recordatorio'}</button>
+          {eventForm.id&&<button type="button" className="button" onClick={()=>setEventForm({id:null,title:"",time:""})}>Cancelar edición de recordatorio</button>}
+        </form>
       </GlassCard>
       <GlassCard className="todo-widget">
         <SectionHeader
@@ -237,6 +248,7 @@ export const DashboardPlanner = memo(function DashboardPlanner() {
               >
                 {task.priority}
               </span>
+              <button className="task-delete" aria-label={`Editar tarea: ${task.title}`} disabled={busy} onClick={()=>{setEditingTask(task.id);setTitle(task.title);setPriority(task.priority);}}><Pencil size={14}/></button>
               <button
                 className="task-delete"
                 aria-label={`Eliminar tarea: ${task.title}`}
@@ -254,8 +266,7 @@ export const DashboardPlanner = memo(function DashboardPlanner() {
           className="task-form"
           onSubmit={async (e) => {
             e.preventDefault();
-            if (await mutate(() => dashboardService.addTask(title, priority)))
-              setTitle("");
+            if (await mutate(() => editingTask?dashboardService.updateTask(editingTask,title,priority):dashboardService.addTask(title, priority))) {setTitle("");setEditingTask(null);}
           }}
         >
           <input
@@ -279,12 +290,13 @@ export const DashboardPlanner = memo(function DashboardPlanner() {
           </select>
           <button
             className="button button-primary"
-            aria-label="Agregar tarea"
+            aria-label={editingTask?"Guardar tarea":"Agregar tarea"}
             disabled={!data || busy}
           >
             <Plus size={18} />
           </button>
         </form>
+        {editingTask&&<button className="button" onClick={()=>{setEditingTask(null);setTitle("");}}>Cancelar edición de tarea</button>}
         <div className="planner-note">
           Un pendiente menos. Una operación más clara.
         </div>

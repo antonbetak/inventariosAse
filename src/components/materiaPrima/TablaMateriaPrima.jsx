@@ -18,23 +18,23 @@ import { FilterTabs } from "../ui/FilterTabs";
 import { DataTable } from "../ui/DataTable";
 import { StatusBadge } from "../ui/StatusBadge";
 import { EmptyState } from "../ui/EmptyState";
-import { money, stockStatus } from "../../utils/inventoryDisplay";
+import { money, quantity, stockStatus } from "../../utils/inventoryDisplay";
 
 export const TablaMateriaPrima = ({
-  materia = [],
+  materia: allMateria = [],
   onAdd,
   onEntry,
   onEdit,
   onDelete,
 }) => {
+  const materia = useMemo(()=>allMateria.filter(i=>!i.es_prueba),[allMateria]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Todos");
-  const { totalUnidades, valorTotal, bajoStock } = useMemo(() => {
+  const { valorTotal, bajoStock } = useMemo(() => {
     return materia.reduce(
       (acc, i) => {
-        acc.totalUnidades += Number(i.stock_actual || 0);
         acc.valorTotal +=
-          Number(i.stock_actual || 0) * Number(i.costo_unidad || 0);
+          i.costo_pendiente || i.costo_unidad == null ? 0 : Number(i.stock_actual || 0) * Number(i.costo_unidad);
         if (i.stock_actual <= i.stock_minimo) acc.bajoStock += 1;
         return acc;
       },
@@ -67,13 +67,14 @@ export const TablaMateriaPrima = ({
           icon={Boxes}
           title="Insumos registrados"
           value={materia.length}
-          detail={`${totalUnidades.toLocaleString("es-MX")} unidades agregadas · diferentes medidas`}
+          detail="Catálogo de materia prima"
           tone="teal"
         />
         <StatCard
           icon={Wallet}
-          title="Valor del inventario"
-          value={money(valorTotal)}
+          title="Valor de materia prima"
+          detail="Existencias × costo por unidad"
+          value={materia.some(i=>i.costo_pendiente||i.costo_unidad==null)?"—":money(valorTotal)}
         />
         <StatCard
           icon={TriangleAlert}
@@ -98,7 +99,7 @@ export const TablaMateriaPrima = ({
             "Insumo",
             "Stock actual",
             "Unidad",
-            "Stock mínimo",
+            "Stock de seguridad",
             "Costo / unidad",
             "Estado",
             "Acciones",
@@ -115,11 +116,11 @@ export const TablaMateriaPrima = ({
                 </div>
               </td>
               <td className="numeric">
-                {Number(m.stock_actual).toLocaleString("es-MX")}
+                {quantity(m.stock_actual)}
               </td>
               <td className="muted">{m.unidad_medida || "—"}</td>
-              <td>{m.stock_minimo}</td>
-              <td className="numeric">{money(m.costo_unidad)}</td>
+              <td>{quantity(m.stock_minimo)}</td>
+              <td className="numeric">{m.costo_pendiente || m.costo_unidad == null ? "—" : money(m.costo_unidad)}</td>
               <td>
                 <StatusBadge status={stockStatus(m)} />
               </td>

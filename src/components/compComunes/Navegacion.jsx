@@ -8,6 +8,7 @@ const tabs = [
   { id: "Dashboard", short: "Inicio", icon: LayoutDashboard },
   { id: "Materia Prima", short: "Insumos", icon: Boxes },
   { id: "Producto Terminado", short: "Producto", icon: PackageCheck },
+  {id:"Operaciones",short:"Ventas",icon:PackageCheck},
   { id: "Reportes", short: "Reportes", icon: ChartNoAxesCombined },
 ];
 export function Navegacion({ activeTab, onTabChange, mobile = false }) {

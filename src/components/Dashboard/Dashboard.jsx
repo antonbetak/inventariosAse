@@ -20,6 +20,7 @@ import { EmptyState } from "../ui/EmptyState";
 import { StatusBadge } from "../ui/StatusBadge";
 import {
   money,
+  quantity,
   stockStatus,
   recordDate,
   dateLabel,
@@ -32,7 +33,8 @@ export const Dashboard = memo(function Dashboard({
   onNavigate,
   onAdd,
 }) {
-  const products = productoTerminado;
+  const products = productoTerminado.filter(p=>!p.es_prueba);
+  materiaPrima = materiaPrima.filter(i=>!i.es_prueba);
   const { rawValue, productValue } = reports;
   const alerts = materiaPrima.filter(
     (m) => Number(m.stock_actual ?? 0) <= Number(m.stock_minimo ?? 0),
@@ -72,22 +74,22 @@ export const Dashboard = memo(function Dashboard({
       <div className="stats-grid">
         <StatCard
           icon={Wallet}
-          title="Valor total inventario"
-          value={money(rawValue + productValue)}
-          detail="Insumos + productos registrados"
+          title="Valor de materia prima"
+          value={reports.rawValueComplete?money(rawValue):"—"}
+          detail="Existencias × costo por unidad"
         />
         <StatCard
           icon={Boxes}
           title="Materia prima"
-          value={money(rawValue)}
+          value={materiaPrima.length}
           detail={`${materiaPrima.length} insumos registrados`}
           tone="teal"
         />
         <StatCard
           icon={PackageCheck}
-          title="Producto terminado"
-          value={money(productValue)}
-          detail={`${products.length} registros de producto`}
+          title="Productos a precio de venta"
+          value={reports.productValueComplete?money(productValue):"—"}
+          detail={`${products.length} productos registrados`}
           tone="violet"
         />
         <StatCard
@@ -97,6 +99,11 @@ export const Dashboard = memo(function Dashboard({
           detail={`${low} insumos adicionales en nivel bajo`}
           tone="amber"
         />
+      </div>
+      <div className="stats-grid three">
+        <StatCard icon={Wallet} title="Ingresos históricos · Excel" value={money(reports.sales.historicalTotal)} detail={reports.sales.historicalPeriod} />
+        <StatCard icon={PackageCheck} title="Ingresos de operaciones" value={money(reports.sales.operationalTotal)} detail={reports.sales.operationalPeriod} />
+        <StatCard icon={TriangleAlert} title="Merma proyectada de agua" value={money(reports.projectedLossCost??0)} detail="Planeación julio–diciembre; no es gasto real" />
       </div>
       <DashboardCharts
         history={reports.history}
@@ -125,8 +132,8 @@ export const Dashboard = memo(function Dashboard({
                   <div className="item-copy">
                     <strong>{m.nombre || "Sin nombre"}</strong>
                     <small>
-                      {m.stock_actual ?? 0} {m.unidad_medida} disponibles ·
-                      mínimo {m.stock_minimo ?? 0}
+                      {quantity(m.stock_actual)} {m.unidad_medida} disponibles ·
+                      seguridad {quantity(m.stock_minimo)}
                     </small>
                     <div className="stock-track">
                       <span
